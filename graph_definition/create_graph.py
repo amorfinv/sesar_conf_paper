@@ -13,7 +13,7 @@ def main():
     gis_data_path = 'gis'
 
     # get airspace polygon from geopackage
-    airspace_gdf = gpd.read_file(path.join(gis_data_path, 'airspace', 'initial_airspace_unprojected.gpkg'))
+    airspace_gdf = gpd.read_file(path.join(gis_data_path, 'airspace', 'initial_airspace_unprojected.gpkg', ))
     airspace_poly = airspace_gdf.geometry.iloc[0]
 
     # create MultiDigraph from polygon
@@ -52,7 +52,6 @@ def main():
     # # get node and edge geodataframe
     nodes = g[0]
     edges = g[1]
-    
     # remove double two way edges
     edges = graph_funcs.remove_two_way_edges(edges)
     
@@ -87,7 +86,7 @@ def main():
     
     # Save geopackage for import to QGIS and momepy
     ox.save_graph_geopackage(G, filepath=path.join(gis_data_path, 'streets', 'processed_streets.gpkg'))
-    nx.all_pairs_shortest_path
+    # nx.all_pairs_shortest_path
     # save csv for reference
     edges.to_csv(path.join(gis_data_path, 'streets', 'edges.csv'))
     nodes.to_csv(path.join(gis_data_path, 'streets', 'nodes.csv'))

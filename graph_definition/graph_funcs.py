@@ -1,3 +1,4 @@
+from platform import node
 import osmnx as ox
 import numpy as np
 from shapely.geometry import shape, LineString
@@ -613,6 +614,33 @@ def set_direction(edges, edge_directions):
 
     return edge_gdf
 
+
+def edge_gdf_format_from_gpkg(edges):
+
+    edge_dict = {'u': edges['u'], 'v': edges['v'], 'key': edges['key'], 'length': edges['length'], 'geometry': edges['geometry']}
+    edge_gdf = gpd.GeoDataFrame(edge_dict, crs=edges.crs)
+    edge_gdf.set_index(['u', 'v', 'key'], inplace=True)
+
+    return edge_gdf
+
+def node_gdf_format_from_gpkg(nodes):
+
+    node_dict = {'osmid': nodes['osmid'], 'y': nodes['y'], 'x': nodes['x'], 'geometry': nodes['geometry']}
+    node_gdf = gpd.GeoDataFrame(node_dict, crs=nodes.crs)
+    node_gdf.set_index(['osmid'], inplace=True)
+
+    return node_gdf
+
+def simplify_graph(nodes, edges):
+    # create osmnx graph 
+    G = ox.graph_from_gdfs(nodes, edges)
+
+    # find single degree nodes
+    node_ids = list(nodes.index.values)
+
+    for osmid, node_deg in G.degree(node_ids):
+        if node_deg == 2:
+            print(osmid)
 
             
 
