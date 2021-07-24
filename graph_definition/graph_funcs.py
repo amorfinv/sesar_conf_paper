@@ -1,10 +1,13 @@
 from platform import node
+from networkx.generators import line
 import osmnx as ox
 import numpy as np
-from shapely.geometry import shape, LineString
+from shapely.geometry import shape, LineString, MultiLineString
+from shapely import ops
 import math
 import fiona
 import geopandas as gpd
+import ast
 
 def get_first_group_edges(G, group_gdf, edges):
     edgedict = dict()
@@ -253,7 +256,7 @@ def add_edge_interior_angles(edges):
         for edge in edges_with_nodes:
             # get linestring geometry of edge
             geom1 = geo.loc[edge]
-            
+
             # check if node is in u,v position. If u, get first segment of linestring (idx=0). If v, get last segment of linestring (idx=-1)
             idx = 0 if node_1 == edge[0] or node_2 == edge[0] else -1
 
@@ -614,10 +617,137 @@ def set_direction(edges, edge_directions):
 
     return edge_gdf
 
+def set_direction2(edges, edge_directions):
+
+    # Create list of stroke groups
+    stroke_groups = list(np.sort(np.unique(np.array(edges['stroke_group'].values))))
+    
+    # We need to put edge_directions in the same order as the edges
+    new_edge_directions = []
+    for num_group, stroke_group_list in enumerate(stroke_groups):
+        # get edges in specific group
+        edge_in_group = edges.loc[edges['stroke_group']== stroke_group_list]
+
+        # get edge indices of stroke group in a list
+        edge_uv = list(edge_in_group.index.values)
+        for direction in edge_directions:
+            if (direction in edge_uv) or ((direction[1], direction[0], 0) in edge_uv):
+                new_edge_directions.append(direction)
+                break
+            
+    edge_directions = new_edge_directions
+
+    # initialize correct index order list and line data list for new geo dataframe
+    index_order = []
+    my_geodata = []
+
+    for num_group, stroke_group_list in enumerate(stroke_groups):
+
+        # get edges in specific group
+        edge_in_group = edges.loc[edges['stroke_group']== stroke_group_list]
+
+        # get edge indices of stroke group in a list
+        edge_uv = list(edge_in_group.index.values)
+
+        # get desired group direction from edge_directions
+        group_direction = edge_directions[num_group]
+
+        # Find index of direction setting edge
+        if group_direction in edge_uv:
+            jdx = edge_uv.index(group_direction)
+        else:
+            jdx = edge_uv.index((group_direction[1], group_direction[0], 0))
+
+        # create counter for while loop
+        idx = 0
+
+        # create a copy of edge_in_group for while loop. TODO: smarter way to do this
+        edges_removed = edge_in_group
+        numb_edges_stroke = len(edge_in_group)
+        search_direct_front = True  # true if searching from front
+        search_direct_back = True
+        while len(edges_removed):
+            curr_edge = edge_in_group.iloc[jdx]
+            curr_index = edge_uv[jdx]
+
+            if curr_index[0] == group_direction[0]:
+                #print(f'{curr_index} edge going correct direction')
+                new_index = (curr_index[0], curr_index[1], 0)
+                edge_line_direct = edge_in_group.loc[curr_index, 'geometry']
+
+            else:
+                #print(f'{curr_index} edge going incorrect direction')
+                new_index = (curr_index[1], curr_index[0], 0)
+                
+                # reverse linestring from edge
+                wrong_line_direct = list(edge_in_group.loc[curr_index, 'geometry'].coords)
+                wrong_line_direct.reverse()
+                edge_line_direct = LineString(wrong_line_direct)
+                
+            # drop edge from dataframe for while loop (TODO: smarter way to do this)
+            edges_removed = edges_removed.drop(index=curr_index)
+
+            # add new_index to index order
+            index_order.append(new_index)
+
+            # add line_string data to list (make this dynamic)
+            length = edge_in_group.loc[curr_index, 'length']
+            geom = edge_line_direct
+            stroke_group_label = edge_in_group.loc[curr_index, 'stroke_group']
+
+            my_geodata.append([new_index[0], new_index[1], new_index[2], length, 
+                               geom, stroke_group_label])
+
+            # set new jdx based on current edge (only if not last edge)
+            if not idx == numb_edges_stroke - 1:
+                # front node
+                node_to_find_front = new_index[1]
+                edge_with_node_front = [item for item in edge_uv if node_to_find_front in item]
+
+                # back node
+                node_to_find_back = new_index[0]
+                edge_with_node_back = [item for item in edge_uv if node_to_find_back in item]
+
+                # either go forwards or backwards
+                edge_with_node_front.remove(curr_index)
+                edge_with_node_back.remove(curr_index)
+
+                if (edge_with_node_front and search_direct_front):
+                    search_direct_back = False
+                    next_edge = edge_with_node_front[0]
+                    jdx = edge_uv.index(next_edge)
+
+                    # set desired direction for next edge
+                    if node_to_find_front == next_edge[0]:
+                        group_direction = next_edge
+                    else:
+                        group_direction = (next_edge[1], next_edge[0], 0)
+                
+                elif (edge_with_node_back and search_direct_back):
+                    search_direct_front = False
+                    next_edge = edge_with_node_back[0]
+                    jdx = edge_uv.index(next_edge)
+
+                    # set desired direction for next edge
+                    if node_to_find_back == next_edge[1]:
+                        group_direction = next_edge
+                    else:
+                        group_direction = (next_edge[1], next_edge[0], 0)
+            
+            # advance counter
+            idx = idx + 1
+
+    # create edge geodataframe
+    column_names = ['u', 'v', 'key', 'length', 'geometry', 'stroke_group']
+    edge_gdf = gpd.GeoDataFrame(my_geodata, columns=column_names, crs=edges.crs)
+
+    edge_gdf.set_index(['u', 'v', 'key'], inplace=True)
+
+    return edge_gdf
 
 def edge_gdf_format_from_gpkg(edges):
-
-    edge_dict = {'u': edges['u'], 'v': edges['v'], 'key': edges['key'], 'length': edges['length'], 'geometry': edges['geometry']}
+    edge_dict = {'u': edges['from'], 'v': edges['to'], 'key': edges['key'], 'length': edges['length'], \
+                'geometry': edges['geometry']}
     edge_gdf = gpd.GeoDataFrame(edge_dict, crs=edges.crs)
     edge_gdf.set_index(['u', 'v', 'key'], inplace=True)
 
@@ -631,19 +761,150 @@ def node_gdf_format_from_gpkg(nodes):
 
     return node_gdf
 
-def simplify_graph(nodes, edges):
-    # create osmnx graph 
-    G = ox.graph_from_gdfs(nodes, edges)
+def simplify_graph(nodes, edges, angle_cut_off = 120):
 
-    # find single degree nodes
+    edges_gdf_new = edges.drop(['length', 'edge_interior_angle'], axis=1).copy()
+    nodes_gdf_new = nodes.copy()
+
+
+    G_check = ox.graph_from_gdfs(nodes, edges)
+    
     node_ids = list(nodes.index.values)
+    edge_uv = list(edges.index.values)
 
-    for osmid, node_deg in G.degree(node_ids):
+    nodes_to_delete = []
+    edges_to_merge = []
+
+    for osmid, node_deg in G_check.degree(node_ids):
         if node_deg == 2:
-            print(osmid)
+            # find edges with a degree-2 node
+            edges_in_node = [item for item in edge_uv if osmid in item]
 
-            
+            edge_1 = edges_in_node[0]
+            edge_2 = edges_in_node[1]
+
+            # find interior angle between both edges
+            int_angle_dict = edges.loc[edge_1, 'edge_interior_angle']
+            int_angle = int_angle_dict[edge_2]
+
+            if int_angle > angle_cut_off:
+                nodes_to_delete.append(osmid)
+                if edge_1 not in edges_to_merge:
+
+                    edges_to_merge.append(edge_1)
+
+                if edge_2 not in edges_to_merge:
+
+                    edges_to_merge.append(edge_2)
+    
+    # get first and last node of group
+    while nodes_to_delete:
+
+        node_inspect = nodes_to_delete[0]
+        # node_inspect = 245495072
+        # node_inspect = 32637459
+        # node_inspect = 1850015448
 
 
+        # create master edge
+        edges_in_merge = [item for item in edges_to_merge if node_inspect in item]
+        edge_1 = edges_in_merge[0]
+        edge_2 = edges_in_merge[1]
+
+        # find which edge is in front and which is in back
+        if node_inspect == edge_1[0]:
+            edge_front = edge_1
+            edge_back = edge_2
+        else:
+            edge_front = edge_2
+            edge_back = edge_1
+
+        # check if edge in back continues
+        start_node = edge_back[0]
+        start_edges_to_merge = [edge_back]
+
+        while start_node in nodes_to_delete:
+            node_inspect = start_node
+
+            edges_in_merge1 = [item for item in edges_to_merge if node_inspect in item]
+            edge_1 = edges_in_merge1[0]
+            edge_2 = edges_in_merge1[1]
+
+            if node_inspect == edge_1[0]:
+                edge_back = edge_2
+            else:
+                edge_back = edge_1
+
+            start_node = edge_back[0]
+            start_edges_to_merge.append(edge_back)
+
+        start_edges_to_merge = start_edges_to_merge[::-1]
+
+        # check if edge in front continues
+        end_node = edge_front[1]
+        end_edges_to_merge = [edge_front]
+
+        while end_node in nodes_to_delete:
+            node_inspect = end_node
+
+            edges_in_merge1 = [item for item in edges_to_merge if node_inspect in item]
+            edge_1 = edges_in_merge1[0]
+            edge_2 = edges_in_merge1[1]
+
+            if node_inspect == edge_1[0]:
+                edge_front = edge_1
+            else:
+                edge_front = edge_2
+
+            end_node = edge_front[1]
+            end_edges_to_merge.append(edge_front)    
+        
+        # edges to merge
+        merged_edges = start_edges_to_merge + end_edges_to_merge
+
+        len_edges = len(merged_edges)
+        nodes_pop = []
+        # get list of nodes to remove in one go
+        for idx in range(0, len_edges):
+
+            if idx < len_edges - 1:
+                node_pop = merged_edges[idx][1]
+                nodes_pop.append(node_pop)
+
+        
+        # merge geometry here
+        multi_line_list = []
+        for edge in merged_edges:
+            # merge line if interior angle is larger than 150 degrees
+            line_string = edges.loc[edge , 'geometry']
+            multi_line_list.append(line_string)
 
 
+        multi_line = MultiLineString(multi_line_list)
+        merged_line = ops.linemerge(multi_line)
+
+        # new edge to add
+        geom = gpd.GeoSeries(merged_line, crs=edges.crs)
+        u = merged_edges[0][0]
+        v = merged_edges[-1][1]
+        key = 0
+
+        row_dict = {'u': u, 'v': v, 'key': key, 'geometry': geom}
+        row_new = gpd.GeoDataFrame(row_dict, crs=edges.crs)
+        row_new.set_index(['u', 'v', 'key'], inplace=True)
+
+        # append edge
+        edges_gdf_new = edges_gdf_new.append(row_new)
+
+        # delete edges from edge_gdf_new
+        edges_gdf_new.drop(index=merged_edges, inplace=True)
+
+        # delete node from nodes_gdf_new
+        nodes_gdf_new.drop(index=nodes_pop, inplace=True)
+
+        # remove
+        for node_del in nodes_pop:
+            nodes_to_delete.remove(node_del)
+
+
+    return nodes_gdf_new, edges_gdf_new

@@ -33,14 +33,7 @@ def main():
     nodes_to_remove = [423816204, 423816203, 25267592, 25267593, 33079226, 33079227, 25267602, 33183703, 33183702, 
                         25267606, 3704365809, 33182085, 1370935902, 1381660583, 1381660593, 30696020, 34166967,
                         30696021, 33242270]
-    # edges_to_remove = [(291088171, 3155094143), (60957703, 287914700), (2451285012, 287914700),
-    #                    (25280685, 30696019), (30696019, 25280685), (392251, 25280685), 
-    #                    (25280685, 392251), (33301346, 1119870220),  
-    #                    (33345331, 33345333), (378699, 378696), (378696, 33143911), 
-    #                    (33143911, 33144821), (264061926, 264055537), (33144706, 33144712),
-    #                    (33144712, 33174086), (33174086, 33144719), (33144719, 92739749),
-    #                    (33345319, 29048469), (287914700, 60957703), (213287623, 251207325),
-    #                    (251207325, 213287623)]
+
     G.remove_nodes_from(nodes_to_remove)
     # G.remove_edges_from(edges_to_remove)
     
@@ -57,6 +50,9 @@ def main():
     
     # remove non parallel opposite edges (or long way)
     edges = graph_funcs.remove_long_way_edges(edges)
+
+    # # add interior angles at all intersections
+    edges = graph_funcs.add_edge_interior_angles(edges)
     
     # allocated edge height based on cardinal method (TODO: do with groups)
     layer_allocation, _ = graph_funcs.allocate_edge_height(edges, 0)
@@ -67,16 +63,11 @@ def main():
     edges['stroke_group'] = coins_obj.stroke_attribute()
     group_gdf = coins_obj.stroke_gdf()
     
-    #init_edge_directions = graph_funcs.get_first_group_edges(G, group_gdf, edges)
-    
-    # Apply direction algorithm
-    # edge_directions = calcDirectionality(group_gdf, nodes, init_edge_directions)
+    # set initial edge_directions
+    init_edge_directions = graph_funcs.get_first_group_edges(G, group_gdf, edges)
     
     # reoroder edge geodatframe
-    # edges = graph_funcs.set_direction(edges, init_edge_directions)
-
-    # # add interior angles at all intersections
-    edges = graph_funcs.add_edge_interior_angles(edges)
+    edges = graph_funcs.set_direction(edges, init_edge_directions)
     
     # create graph and save edited
     G = ox.graph_from_gdfs(nodes, edges)
