@@ -2906,7 +2906,7 @@
     <edge source="378471" target="258358061" id="0">
       <data key="d8">[537689832, 785306583, 537689831]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Lerchenfelder Gürtel</data>
       <data key="d13">primary</data>
@@ -3206,7 +3206,7 @@
     <edge source="378728" target="1629378075" id="0">
       <data key="d8">[337654522, 385800228]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Währinger Gürtel</data>
       <data key="d13">primary</data>
@@ -3303,7 +3303,7 @@
       <data key="d10">2</data>
       <data key="d12">Schulgasse</data>
       <data key="d13">secondary</data>
-      <data key="d14">['50', '30']</data>
+      <data key="d14">['30', '50']</data>
       <data key="d15">74.995</data>
       <data key="d16">LINESTRING (16.3479451 48.224684, 16.348777 48.2246222, 16.3488214 48.2246194, 16.3489507 48.2246067)</data>
     </edge>
@@ -3543,7 +3543,7 @@
     <edge source="655018" target="33344802" id="0">
       <data key="d8">[502918368, 30282227, 502918372]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Währinger Gürtel</data>
       <data key="d13">primary</data>
@@ -5144,7 +5144,7 @@
     <edge source="33079191" target="33079216" id="0">
       <data key="d8">[576332930, 810647295]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Hernalser Gürtel</data>
       <data key="d13">primary</data>
@@ -5837,7 +5837,7 @@
     <edge source="33143763" target="2455074398" id="0">
       <data key="d8">[813507907, 26738443]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Hernalser Gürtel</data>
       <data key="d13">primary</data>
@@ -6319,7 +6319,7 @@
     <edge source="33144366" target="3312560802" id="0">
       <data key="d8">[679596246, 24412287]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Währinger Gürtel</data>
       <data key="d13">primary</data>
@@ -6368,7 +6368,7 @@
     <edge source="33144414" target="33345332" id="0">
       <data key="d8">[657079587, 657079588, 537932457, 537932460, 679596247, 337654522]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Währinger Gürtel</data>
       <data key="d13">primary</data>
@@ -7618,7 +7618,7 @@
     <edge source="33144935" target="33144914" id="0">
       <data key="d8">[5004064, 26617426]</data>
       <data key="d9">True</data>
-      <data key="d12">['Nattergasse', 'Parhamerplatz']</data>
+      <data key="d12">['Parhamerplatz', 'Nattergasse']</data>
       <data key="d13">residential</data>
       <data key="d14">30</data>
       <data key="d15">137.11700000000002</data>
@@ -9305,7 +9305,7 @@
     <edge source="33345319" target="29048469" id="0">
       <data key="d8">[38690113, 24939398]</data>
       <data key="d9">True</data>
-      <data key="d12">['Klostergasse', 'Staudgasse']</data>
+      <data key="d12">['Staudgasse', 'Klostergasse']</data>
       <data key="d13">residential</data>
       <data key="d14">30</data>
       <data key="d15">191.162</data>
@@ -9413,7 +9413,7 @@
     <edge source="33345324" target="33345335" id="0">
       <data key="d8">[5010772, 84346597]</data>
       <data key="d9">True</data>
-      <data key="d12">['Tendlergasse', 'Prechtlgasse']</data>
+      <data key="d12">['Prechtlgasse', 'Tendlergasse']</data>
       <data key="d13">residential</data>
       <data key="d14">30</data>
       <data key="d15">173.435</data>
@@ -11334,7 +11334,7 @@
     <edge source="291948941" target="264056404" id="0">
       <data key="d8">[261704728, 9866315]</data>
       <data key="d9">True</data>
-      <data key="d12">['Friedmanngasse', 'Deinhardsteingasse']</data>
+      <data key="d12">['Deinhardsteingasse', 'Friedmanngasse']</data>
       <data key="d13">residential</data>
       <data key="d14">30</data>
       <data key="d15">201.573</data>
@@ -13041,7 +13041,7 @@
     <edge source="3312560802" target="378696" id="0">
       <data key="d8">[810541795, 324549972]</data>
       <data key="d9">True</data>
-      <data key="d10">['3', '4']</data>
+      <data key="d10">['4', '3']</data>
       <data key="d11">B221</data>
       <data key="d12">Währinger Gürtel</data>
       <data key="d13">primary</data>
@@ -13116,7 +13116,7 @@
     <edge source="3710788341" target="314318424" id="0">
       <data key="d8">[4996506, 304002815]</data>
       <data key="d9">True</data>
-      <data key="d12">['Josef-Matthias-Hauer-Platz', 'Skodagasse']</data>
+      <data key="d12">['Skodagasse', 'Josef-Matthias-Hauer-Platz']</data>
       <data key="d13">residential</data>
       <data key="d14">30</data>
       <data key="d15">37.328</data>
@@ -13406,7 +13406,7 @@
       <data key="d15">32.908</data>
       <data key="d16">LINESTRING (16.3260877 48.2132198, 16.3263498 48.2132676, 16.3264154 48.2132796, 16.3265162 48.2132976)</data>
     </edge>
-    <data key="d0">2021-07-24 17:54:05</data>
+    <data key="d0">2021-07-24 19:38:54</data>
     <data key="d1">OSMnx 1.1.1</data>
     <data key="d2">epsg:4326</data>
     <data key="d3">True</data>

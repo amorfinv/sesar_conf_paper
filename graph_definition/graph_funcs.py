@@ -2,12 +2,12 @@ from platform import node
 from networkx.generators import line
 import osmnx as ox
 import numpy as np
-from shapely.geometry import shape, LineString, MultiLineString
+from shapely.geometry import shape, LineString, MultiLineString, Point
 from shapely import ops
 import math
 import fiona
 import geopandas as gpd
-import ast
+from pyproj import CRS
 
 def get_first_group_edges(G, group_gdf, edges):
     edgedict = dict()
@@ -748,7 +748,7 @@ def set_direction2(edges, edge_directions):
 def edge_gdf_format_from_gpkg(edges):
     edge_dict = {'u': edges['from'], 'v': edges['to'], 'key': edges['key'], 'length': edges['length'], \
                 'geometry': edges['geometry']}
-    edge_gdf = gpd.GeoDataFrame(edge_dict, crs=edges.crs)
+    edge_gdf = gpd.GeoDataFrame(edge_dict, crs=CRS.from_user_input(4326))
     edge_gdf.set_index(['u', 'v', 'key'], inplace=True)
 
     return edge_gdf
@@ -756,7 +756,7 @@ def edge_gdf_format_from_gpkg(edges):
 def node_gdf_format_from_gpkg(nodes):
 
     node_dict = {'osmid': nodes['osmid'], 'y': nodes['y'], 'x': nodes['x'], 'geometry': nodes['geometry']}
-    node_gdf = gpd.GeoDataFrame(node_dict, crs=nodes.crs)
+    node_gdf = gpd.GeoDataFrame(node_dict, crs=CRS.from_user_input(4326))
     node_gdf.set_index(['osmid'], inplace=True)
 
     return node_gdf
@@ -908,3 +908,135 @@ def simplify_graph(nodes, edges, angle_cut_off = 120):
 
 
     return nodes_gdf_new, edges_gdf_new
+
+def manual_edits(nodes, edges):
+    '''
+    Manual edits for edge gdf and node gdf
+    '''
+    # make copy of nodes edges
+    nodes_gdf_new = nodes.copy()
+    edges_gdf_new = edges.drop(['stroke_group'], axis=1).copy()
+
+    ##################### SPLITTING AN EDGE HERE ###############
+
+    # select edge to split, the new geometry and location along linestring
+    edge_to_split = (2457060680, 685158, 0)
+    new_node_osmid = 10
+    split_loc = 5
+
+    # split edge
+    node_new, row_new1, row_new2 = split_edge(edge_to_split, split_loc, new_node_osmid, nodes, edges)
+
+    # append nodes and edges and remove split edge
+    nodes_gdf_new = nodes_gdf_new.append(node_new)
+    edges_gdf_new = edges_gdf_new.append([row_new1, row_new2])
+    edges_gdf_new.drop(index=edge_to_split, inplace=True)
+
+    ##################### CREATE NEW EDGE #########################
+    # give u,v of new edge
+    u = 10
+    v = 68164549
+
+    # append edges
+    edges_gdf_new = edges_gdf_new.append(new_edge_straight(u, v, nodes_gdf_new, edges_gdf_new))
+
+    ################# SPLIT ANOTHER EDGE ##############
+    edge_to_split = (3704365814, 33182075, 0)
+    new_node_osmid = 11
+    split_loc = 4
+
+    # split edge
+    node_new, row_new1, row_new2 = split_edge(edge_to_split, split_loc, new_node_osmid, nodes, edges)
+
+    # append nodes and edges and remove split edge
+    nodes_gdf_new = nodes_gdf_new.append(node_new)
+    edges_gdf_new = edges_gdf_new.append([row_new1, row_new2])
+    edges_gdf_new.drop(index=edge_to_split, inplace=True)
+
+    ##################### CREATE ANOTHER NEW EDGE #########################
+    # give u,v of new edge
+    u = 1114680094
+    v = 11
+
+    # append edges
+    edges_gdf_new = edges_gdf_new.append(new_edge_straight(u, v, nodes_gdf_new, edges_gdf_new))
+
+    return nodes_gdf_new, edges_gdf_new
+
+def split_edge(edge_to_split, split_loc, new_node_osmid, nodes, edges):
+    '''
+
+    function splits edge and returns new node geometry and new edges,
+    at the moment delete edges outside of this function. At the moment it only works with linestrings
+    cannot split a straight line yet
+
+    split_loc is the index of a point in the linestring
+
+    '''
+
+    # get geometry of split edge
+    split_geom = list(edges.loc[edge_to_split, 'geometry'].coords)
+
+    # create new edges and new node
+    new_edge_1 = (edge_to_split[0], new_node_osmid)
+    new_edge_2 = (new_node_osmid, edge_to_split[1])
+
+    # get new node and geom
+    new_node_yx = split_geom[split_loc]
+    new_node_geom = Point(new_node_yx)
+
+    geom_edge_1 = LineString(split_geom[:split_loc + 1])
+    geom_edge_2 = LineString(split_geom[split_loc:])
+
+    # create geodataframe of point and append to nodes
+    osmid = new_node_osmid
+    x = new_node_yx[0]
+    y = new_node_yx[1]
+    point_geom = gpd.GeoSeries(new_node_geom, crs=edges.crs)
+
+    node_dict = {'osmid': osmid, 'y': y, 'x': x, 'geometry': point_geom}
+    node_new = gpd.GeoDataFrame(node_dict, crs=edges.crs)
+    node_new.set_index('osmid', inplace=True)
+
+    # create geodataframe of new edges and append to edge
+    geom1 = gpd.GeoSeries(geom_edge_1, crs=edges.crs)
+    u1 = new_edge_1[0]
+    v1 = new_edge_1[1]
+    key1 = 0
+
+    geom2 = gpd.GeoSeries(geom_edge_2, crs=edges.crs)
+    u2 = new_edge_2[0]
+    v2 = new_edge_2[1]
+    key2 = 0
+
+    row_dict1 = {'u': u1, 'v': v1, 'key': key1, 'geometry': geom1}
+    row_new1 = gpd.GeoDataFrame(row_dict1, crs=edges.crs)
+    row_new1.set_index(['u', 'v', 'key'], inplace=True)
+
+    row_dict2 = {'u': u2, 'v': v2, 'key': key2, 'geometry': geom2}
+    row_new2 = gpd.GeoDataFrame(row_dict2, crs=edges.crs)
+    row_new2.set_index(['u', 'v', 'key'], inplace=True)
+
+    return node_new, row_new1, row_new2
+
+def new_edge_straight(u, v, nodes, edges):
+
+    '''
+
+    create a new edge between two points (straight line)
+
+    '''
+
+    u_geom = list(nodes.loc[u, 'geometry'].coords)
+    v_geom = list(nodes.loc[v, 'geometry'].coords)
+
+    new_geom = LineString([u_geom[0], v_geom[0]])
+    
+    key = 0
+    geom_new_series = gpd.GeoSeries(new_geom, crs=edges.crs)
+
+    row_dict = {'u': u, 'v': v, 'key': key, 'geometry': geom_new_series}
+    row_new = gpd.GeoDataFrame(row_dict, crs=edges.crs)
+    row_new.set_index(['u', 'v', 'key'], inplace=True)
+
+    return row_new
