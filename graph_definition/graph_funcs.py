@@ -32,22 +32,6 @@ def get_first_group_edges(G, group_gdf, edges):
                 break
     return first_edges
 
-def poly_shapefile_to_shapely(filepath):
-    '''
-    Convert a polygon shapefile into a shapely polygon. This is done so that a QGIS shapefile can be used to generate a street network
-    Usage:
-        shapely_polygon = poly_shapefile_to_shapely(shapefile_polygon_filename)
-    '''
-
-    # read shapefile and make into a dictionary
-    shapefile = fiona.open(filepath)
-    shap_dict = next(iter(shapefile))
-
-    # get geometry coordinates and convert to shapely
-    poly = shape(shap_dict['geometry'])
-
-    return poly
-
 def remove_unconnected_streets(G):
     '''
     Argument is an osmnx Graph.
@@ -168,6 +152,101 @@ def allocate_edge_height(edges_gdf, rotation_val=0):
     bearing_indices = calculate_bearing_diff_indices(bearings, low_bound_1, high_bound_1, low_bound_2, high_bound_2)
     
     return layer_allocation, bearing_indices
+
+def calculate_integral_bearing_difference(edges_geometry):
+    '''
+    Argument:
+        -edge_geometry: numpy array containing the LineString information of each edge
+
+    The function integrates the bearing change across each edge. This is used later to remove edges not part 
+    of rotation angle optimization. See allocate_edge_height for more information.
+
+    Returns a numpy array containing the integral bearing differences which can then be added to the edge geodataframe.
+
+    TODO: check if integration takes signs into account correctly. clockwise and anticlockwise changes should be 
+    accounted for with opposite signs. so a weaving street may get an integral bearing difference of zero.
+    Does not seem to be taken into account
+    '''
+
+    # initialize variable of for loop to put integration result of each edge
+    integral_bearings_diff = []
+
+    for _, line_string in np.ndenumerate(edges_geometry):
+
+        # unpack lat lon values from shapely linestring. First value is lon, second is lat
+        lon, lat = np.array(line_string.coords.xy)
+
+        if not len(lat) == 2:
+            # only go into loop if there are more than 2 edges in the linestring (or 3 sets of points)
+            n = len(lat) -1
+
+            # initialize array that captures segment bearings
+            bearing_list = np.empty(n)
+
+            for jdx in range(0, n):
+                # get origin and destination point of edge jdx. there are N + 1 edges and N points
+                origin_point = (lat[jdx], lon[jdx])
+                destination_point = (lat[jdx + 1], lon[jdx + 1])
+
+                # Get bearing from osmnx function and save to array
+                bearing_list[jdx] = get_bearing(origin_point, destination_point)
+            
+            # get bearing difference of first and last segment. Same as summing the difference (this is the integral difference)
+            integral_difference = abs(bearing_list[-1] - bearing_list[0])
+            integral_difference = 360 - integral_difference if integral_difference > 180 else integral_difference
+
+
+            # append to list with absolute value since we don't care about direction
+            integral_bearings_diff.append(round(abs(integral_difference)))
+
+        else:
+            # set integral bearing difference to zero when only one edge or 2 sets of points
+            integral_bearings_diff.append(0)
+
+    return integral_bearings_diff
+
+def get_bearing(origin_point, destination_point):
+    """
+    Code obtained from osmnx library. See notes below.
+    ---------------------------------------------------------------------
+
+    Calculate the bearing between two lat-lng points.
+
+    Each argument tuple should represent (lat, lng) as decimal degrees.
+    Bearing represents angle in degrees (clockwise) between north and the
+    direction from the origin point to the destination point.
+
+    Parameters
+    ----------
+    origin_point : tuple
+        (lat, lng)
+    destination_point : tuple
+        (lat, lng)
+
+    Returns
+    -------
+    bearing : float
+        the compass bearing in decimal degrees from the origin point to the
+        destination point
+    """
+    if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
+        raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
+
+    # get latitudes and the difference in longitude, as radians
+    lat1 = np.radians(origin_point[0])
+    lat2 = np.radians(destination_point[0])
+    diff_lng = np.radians(destination_point[1] - origin_point[1])
+
+    # calculate initial bearing from -180 degrees to +180 degrees
+    x = np.sin(diff_lng) * np.cos(lat2)
+    y = np.cos(lat1) * np.sin(lat2) - (np.sin(lat1) * np.cos(lat2) * np.cos(diff_lng))
+    initial_bearing = np.arctan2(x, y)
+
+    # normalize initial bearing to 0-360 degrees to get compass bearing
+    initial_bearing = np.degrees(initial_bearing)
+    bearing = initial_bearing % 360
+
+    return bearing
 
 def calculate_bearing_diff_indices(bearings, low_bound_1, high_bound_1, low_bound_2, high_bound_2):
     '''
@@ -762,7 +841,10 @@ def node_gdf_format_from_gpkg(nodes):
     return node_gdf
 
 def simplify_graph(nodes, edges, angle_cut_off = 120):
-
+    '''
+    remove degree-2 edges with int angle greater than 120, requires fresh add_edge_interior angles
+    Basically consolidates when deleting manually
+    '''
     edges_gdf_new = edges.drop(['length', 'edge_interior_angle'], axis=1).copy()
     nodes_gdf_new = nodes.copy()
 
@@ -909,6 +991,47 @@ def simplify_graph(nodes, edges, angle_cut_off = 120):
 
     return nodes_gdf_new, edges_gdf_new
 
+def new_groups_90(nodes, edges, angle_cut_off = 20):
+    '''
+    Create new groups for groups that turn 90 degrees
+    '''
+    edges_gdf_new = edges.drop(['edge_interior_angle'], axis=1).copy()
+    nodes_gdf_new = nodes.copy()
+
+    G_check = ox.graph_from_gdfs(nodes, edges)
+    
+    node_ids = list(nodes.index.values)
+    edge_uv = list(edges.index.values)
+
+    nodes_to_check = []
+    edges_to_regroup = []
+
+    for osmid, node_deg in G_check.degree(node_ids):
+        if node_deg == 2:
+            # find edges with a degree-2 node
+            edges_in_node = [item for item in edge_uv if osmid in item]
+
+            edge_1 = edges_in_node[0]
+            edge_2 = edges_in_node[1]
+
+            # find interior angle between both edges
+            int_angle_dict = edges.loc[edge_1, 'edge_interior_angle']
+            int_angle = int_angle_dict[edge_2]
+
+            if  90 - angle_cut_off < int_angle < 90 + angle_cut_off :
+                nodes_to_check.append(osmid)
+                if edge_1 not in edges_to_regroup:
+
+                    edges_to_regroup.append(edge_1)
+
+                if edge_2 not in edges_to_regroup:
+
+                    edges_to_regroup.append(edge_2)
+        
+    print(nodes_to_check)
+
+    return 0,0
+
 def manual_edits(nodes, edges):
     '''
     Manual edits for edge gdf and node gdf
@@ -960,6 +1083,20 @@ def manual_edits(nodes, edges):
 
     # append edges
     edges_gdf_new = edges_gdf_new.append(new_edge_straight(u, v, nodes_gdf_new, edges_gdf_new))
+
+    ################# SPLIT ANOTHER EDGE ##############
+    # TODO: create function that adds a new node when int_bearing_diff is near 90
+    edge_to_split = (33183652, 25267624, 0)
+    new_node_osmid = 12
+    split_loc = 4
+
+    # split edge
+    node_new, row_new1, row_new2 = split_edge(edge_to_split, split_loc, new_node_osmid, nodes, edges)
+
+    # append nodes and edges and remove split edge
+    nodes_gdf_new = nodes_gdf_new.append(node_new)
+    edges_gdf_new = edges_gdf_new.append([row_new1, row_new2])
+    edges_gdf_new.drop(index=edge_to_split, inplace=True)
 
     return nodes_gdf_new, edges_gdf_new
 

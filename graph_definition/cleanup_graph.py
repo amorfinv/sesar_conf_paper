@@ -38,16 +38,26 @@ def main():
     # add edge interior angles due to edge changes of COINS
     edges = graph_funcs.add_edge_interior_angles(edges)
 
-    # remvoe degree 2 edges with int angle greater than 120, requires fresj add_edge_interior angles
+    # reomove degree 2 edges with int angle greater than 120, requires fresh add_edge_interior angles
     nodes, edges = graph_funcs.simplify_graph(nodes, edges, angle_cut_off=120)
 
     # # manually adapt some edges
     nodes, edges = graph_funcs.manual_edits(nodes, edges)
-    
+
     # rerun coins to group new edges and interior angles
     coins_obj = momepy.COINS(edges)
     edges['stroke_group'] = coins_obj.stroke_attribute()
     edges = graph_funcs.add_edge_interior_angles(edges)
+
+    # get edge geomtery (linestring info) from geodataframe and calculate integral bearing differenc
+    edges_geometry = edges['geometry'].to_numpy()
+    integral_bearings_diff = graph_funcs.calculate_integral_bearing_difference(edges_geometry)
+
+    # add bearing difference column to geodataframe
+    edges['int_bearing_diff'] = integral_bearings_diff
+
+    # find degree node 2 require fresh add interior angles
+    _, _ = graph_funcs.new_groups_90(nodes, edges)
 
     # create graph and save edited
     G = ox.graph_from_gdfs(nodes, edges)
