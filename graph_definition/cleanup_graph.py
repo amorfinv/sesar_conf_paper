@@ -56,8 +56,8 @@ def main():
     # add bearing difference column to geodataframe
     edges['int_bearing_diff'] = integral_bearings_diff
 
-    # find degree node 2 require fresh add interior angles
-    _, _ = graph_funcs.new_groups_90(nodes, edges)
+    # find degree node 2 require fresh add interior angles TODO: migrate from group_split
+    # _, _ = graph_funcs.new_groups_90(nodes, edges)
 
     # create graph and save edited
     G = ox.graph_from_gdfs(nodes, edges)

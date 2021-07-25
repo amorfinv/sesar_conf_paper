@@ -1020,7 +1020,7 @@ def new_groups_90(nodes, edges, angle_cut_off = 45):
 
             if  90 - angle_cut_off < int_angle < 90 + angle_cut_off :
                 nodes_to_check.append(osmid)
-    print(len(nodes_to_check))
+
     for node_split in nodes_to_check:
 
         new_group_gdf = split_group_at_node(node_split, edges_gdf_new)
