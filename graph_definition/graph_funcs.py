@@ -1,4 +1,4 @@
-from platform import node
+from platform import java_ver, node
 from networkx.generators import line
 import osmnx as ox
 import numpy as np
@@ -8,6 +8,7 @@ import math
 import fiona
 import geopandas as gpd
 from pyproj import CRS
+import ast
 
 def get_first_group_edges(G, group_gdf, edges):
     edgedict = dict()
@@ -991,11 +992,11 @@ def simplify_graph(nodes, edges, angle_cut_off = 120):
 
     return nodes_gdf_new, edges_gdf_new
 
-def new_groups_90(nodes, edges, angle_cut_off = 20):
+def new_groups_90(nodes, edges, angle_cut_off = 45):
     '''
-    Create new groups for groups that turn 90 degrees
+    Create new groups for groups that turn 90 degrees +- 45
     '''
-    edges_gdf_new = edges.drop(['edge_interior_angle'], axis=1).copy()
+    edges_gdf_new = edges.copy()
     nodes_gdf_new = nodes.copy()
 
     G_check = ox.graph_from_gdfs(nodes, edges)
@@ -1004,7 +1005,6 @@ def new_groups_90(nodes, edges, angle_cut_off = 20):
     edge_uv = list(edges.index.values)
 
     nodes_to_check = []
-    edges_to_regroup = []
 
     for osmid, node_deg in G_check.degree(node_ids):
         if node_deg == 2:
@@ -1015,22 +1015,90 @@ def new_groups_90(nodes, edges, angle_cut_off = 20):
             edge_2 = edges_in_node[1]
 
             # find interior angle between both edges
-            int_angle_dict = edges.loc[edge_1, 'edge_interior_angle']
+            int_angle_dict = ast.literal_eval(edges.loc[edge_1, 'edge_interior_angle'])
             int_angle = int_angle_dict[edge_2]
 
             if  90 - angle_cut_off < int_angle < 90 + angle_cut_off :
                 nodes_to_check.append(osmid)
-                if edge_1 not in edges_to_regroup:
+    print(len(nodes_to_check))
+    for node_split in nodes_to_check:
 
-                    edges_to_regroup.append(edge_1)
+        new_group_gdf = split_group_at_node(node_split, edges_gdf_new)
+        new_group_edges = new_group_gdf.index.values
 
-                if edge_2 not in edges_to_regroup:
+        # drop new_group dataframe new_group_gdf to edges_gdf
+        edges_gdf_new.drop(index=new_group_edges, inplace=True)
+        edges_gdf_new = edges_gdf_new.append(new_group_gdf)
 
-                    edges_to_regroup.append(edge_2)
-        
-    print(nodes_to_check)
+    return nodes_gdf_new, edges_gdf_new
 
-    return 0,0
+def split_group_at_node(node_split, edges):
+
+    '''Split a group at a node'''
+    stroke_group_list = list(edges.loc[:,'stroke_group'].values)
+    unique_stroke = []
+
+    for stroke_group in stroke_group_list:
+        if not stroke_group in unique_stroke:
+            unique_stroke.append(stroke_group)
+    
+    new_group_num = len(unique_stroke)
+
+    # find relevant edges of node_split
+    edge_uv = list(edges.index.values)
+    edges_with_node = [item for item in edge_uv if node_split in item]
+
+    edge_back = edges_with_node[0]
+    edge_front = edges_with_node[1]
+
+    # edge front and subsequent edges get a new group
+    current_group = edges.loc[edge_front, 'stroke_group']        
+    
+    group_gdf = edges[edges['stroke_group']==current_group]
+    group_uv = list(group_gdf.index.values)
+
+    # organize group
+    # check if edge in front continues
+    end_node = edge_front[1]
+    end_edges_to_merge = [edge_front]
+
+    while end_node:
+        node_inspect = end_node
+
+        edges_in_merge1 = [item for item in group_uv if node_inspect in item]
+        try:
+            edge_1 = edges_in_merge1[0]
+            edge_2 = edges_in_merge1[1]
+
+            if node_inspect == edge_1[0]:
+                edge_front = edge_1
+            else:
+                edge_front = edge_2
+            end_node = edge_front[1]
+            end_edges_to_merge.append(edge_front)
+        except IndexError:
+            end_node = False  
+
+    # edges to merge
+    new_group_edges = end_edges_to_merge
+    my_geodata = []
+
+    for new_edge in new_group_edges:
+        length = group_gdf.loc[new_edge, 'length']
+        geom = group_gdf.loc[new_edge, 'geometry']
+        bearing = group_gdf.loc[new_edge, 'bearing']
+        edge_interior_angle = group_gdf.loc[new_edge, 'edge_interior_angle']
+        int_bearing_diff = group_gdf.loc[new_edge, 'int_bearing_diff']
+        stroke_group_label = new_group_num
+
+        my_geodata.append([new_edge[0], new_edge[1], new_edge[2], geom, stroke_group_label, edge_interior_angle, int_bearing_diff, bearing, length])
+    
+    # create edge geodataframe
+    column_names = ['u', 'v', 'key', 'geometry', 'stroke_group', 'edge_interior_angle', 'int_bearing_diff', 'bearing', 'length']
+    new_group_gdf = gpd.GeoDataFrame(my_geodata, columns=column_names, crs=edges.crs)
+    new_group_gdf.set_index(['u', 'v', 'key'], inplace=True)
+
+    return new_group_gdf
 
 def manual_edits(nodes, edges):
     '''

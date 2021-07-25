@@ -1,2 +1,3 @@
 graph_defintion/cache
 graph_definition/__pycache__/
+.vscode/settings.json
