@@ -7382,6 +7382,6 @@
       <data key="d7">282.6</data>
       <data key="d8">46.284</data>
     </edge>
-    <data key="d0">epsg:4326</data>
+    <data key="d0">GEOGCS["Undefined geographic SRS",DATUM["unknown",SPHEROID["unknown",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]</data>
   </graph>
 </graphml>

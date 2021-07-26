@@ -3013,7 +3013,7 @@
     </edge>
     <edge source="378696" target="685163" id="0">
       <data key="d5">[384292260, 384292261]</data>
-      <data key="d6">['4', '5']</data>
+      <data key="d6">['5', '4']</data>
       <data key="d7">Hernalser Gürtel</data>
       <data key="d8">primary</data>
       <data key="d9">50</data>
@@ -5057,7 +5057,7 @@
     <edge source="33079211" target="33143803" id="0">
       <data key="d5">[26738443, 26738446]</data>
       <data key="d6">3</data>
-      <data key="d7">['Hernalser Gürtel', 'Uhlplatz']</data>
+      <data key="d7">['Uhlplatz', 'Hernalser Gürtel']</data>
       <data key="d8">primary</data>
       <data key="d9">50</data>
       <data key="d10">True</data>
@@ -5572,7 +5572,7 @@
     </edge>
     <edge source="33182067" target="378700" id="0">
       <data key="d5">[26738742, 38660527]</data>
-      <data key="d7">['Mariannengasse', 'Zimmermannplatz']</data>
+      <data key="d7">['Zimmermannplatz', 'Mariannengasse']</data>
       <data key="d8">residential</data>
       <data key="d9">30</data>
       <data key="d10">True</data>
@@ -8991,7 +8991,7 @@
     </edge>
     <edge source="33143667" target="685163" id="0">
       <data key="d5">[384794714, 4583411]</data>
-      <data key="d6">['3', '1']</data>
+      <data key="d6">['1', '3']</data>
       <data key="d7">Hernalser Hauptstraße</data>
       <data key="d8">secondary</data>
       <data key="d9">50</data>
@@ -9243,7 +9243,7 @@
     </edge>
     <edge source="33079197" target="33079198" id="0">
       <data key="d5">[234873388, 4996477, 28693078]</data>
-      <data key="d7">['Payergasse', 'Brunnengasse']</data>
+      <data key="d7">['Brunnengasse', 'Payergasse']</data>
       <data key="d8">residential</data>
       <data key="d9">30</data>
       <data key="d10">True</data>
@@ -9640,7 +9640,7 @@
     <edge source="2451408746" target="2335589799" id="0">
       <data key="d5">[237194286, 27497479]</data>
       <data key="d6">1</data>
-      <data key="d7">['Hebragasse', 'Zimmermannplatz']</data>
+      <data key="d7">['Zimmermannplatz', 'Hebragasse']</data>
       <data key="d8">secondary</data>
       <data key="d9">30</data>
       <data key="d10">True</data>
@@ -11808,7 +11808,7 @@
     </edge>
     <edge source="3710788341" target="1114010120" id="0">
       <data key="d5">[96190456, 12718114, 367126508]</data>
-      <data key="d7">['Albertgasse', 'Josef-Matthias-Hauer-Platz']</data>
+      <data key="d7">['Josef-Matthias-Hauer-Platz', 'Albertgasse']</data>
       <data key="d8">residential</data>
       <data key="d9">30</data>
       <data key="d10">True</data>

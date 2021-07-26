@@ -1,16 +1,13 @@
-from platform import java_ver, node
-from networkx.generators import line
 import osmnx as ox
 import numpy as np
-from shapely.geometry import shape, LineString, MultiLineString, Point
+from shapely.geometry import LineString, MultiLineString, Point
 from shapely import ops
 import math
-import fiona
 import geopandas as gpd
 from pyproj import CRS
 import ast
 
-def get_first_group_edges(G, group_gdf, edges):
+def get_first_group_edges(G, edges, group_gdf = None):
     edgedict = dict()
     first_edges = []
     # Create own directionary of edges
@@ -19,18 +16,35 @@ def get_first_group_edges(G, group_gdf, edges):
         if group_no not in edgedict:
             edgedict[group_no] = []
         edgedict[group_no].append(index)
-        
-    # Create first_edges
-    for idx, group in enumerate(group_gdf.geometry):
-        first_node = ox.nearest_nodes(G, group.coords[0][0], group.coords[0][1])
-        for edge in edgedict[idx]:
-            if edge[0] == first_node:
-                first_edges.append(edge)
-                break
-            
-            elif edge[1] == first_node:
-                first_edges.append((edge[1], edge[0], edge[2]))
-                break
+    
+    if group_gdf is not None:
+        for idx, group in enumerate(group_gdf.geometry):
+            first_node = ox.nearest_nodes(G, group.coords[0][0], group.coords[0][1])
+            for edge in edgedict[idx]:
+                if edge[0] == first_node:
+                    first_edges.append(edge)
+                    break
+                
+                elif edge[1] == first_node:
+                    first_edges.append((edge[1], edge[0], edge[2]))
+                    break
+    else:
+        # If a node only appears once, then that edge is either the first or last of a group
+        for group_no in edgedict:
+            group_edges = np.array(edgedict[group_no])
+            flat_edges = group_edges.flatten()
+            flat_edges_nonzero = flat_edges[flat_edges != 0]
+            values, counts = np.unique(flat_edges_nonzero, return_counts = True)
+            unique_index = np.argwhere(counts == 1)
+            first_node = values[unique_index[0][0]]
+            for edge in group_edges:
+                if edge[0] == first_node:
+                    first_edges.append((edge[0], edge[1], edge[2]))
+                    break
+                
+                elif edge[1] == first_node:
+                    first_edges.append((edge[1], edge[0], edge[2]))
+                    break
     return first_edges
 
 def remove_unconnected_streets(G):
@@ -701,7 +715,6 @@ def set_direction2(edges, edge_directions):
 
     # Create list of stroke groups
     stroke_groups = list(np.sort(np.unique(np.array(edges['stroke_group'].values))))
-    
     # We need to put edge_directions in the same order as the edges
     new_edge_directions = []
     for num_group, stroke_group_list in enumerate(stroke_groups):
@@ -717,6 +730,8 @@ def set_direction2(edges, edge_directions):
             
     edge_directions = new_edge_directions
 
+        
+
     # initialize correct index order list and line data list for new geo dataframe
     index_order = []
     my_geodata = []
@@ -731,7 +746,6 @@ def set_direction2(edges, edge_directions):
 
         # get desired group direction from edge_directions
         group_direction = edge_directions[num_group]
-
         # Find index of direction setting edge
         if group_direction in edge_uv:
             jdx = edge_uv.index(group_direction)
