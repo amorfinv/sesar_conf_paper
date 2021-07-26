@@ -9,6 +9,7 @@ import random
 import osmnx as ox
 import networkx as nx
 import os 
+import copy
 nm = 1852
 ft = 1/0.3048
 
@@ -244,8 +245,150 @@ class BlueskySCNTools():
             destinations = []
             for node in nodes:
                 if node[2] in dest_nodes:
-                    destinations.append(node)       
+                    destinations.append(node)
         
+        # This loop is for time steps
+        while start_time <= max_time:
+            possible_origins = origins.copy()
+            possible_destinations = destinations.copy()
+            
+            # We want to keep track of what aircraft might have reached their
+            # destinations.
+            # Skip first time step
+            if timestep > 0:
+                for aircraft in trafdist:
+                    i = np.where(np.all(trafdist==aircraft,axis=1))[0]
+                    # Subtract a dt*speed from length for each aircraft
+                    dist = float(aircraft[1]) - aircraft_vel * dt
+                    if dist < 0:
+                        # Aircraft probably reached its destination
+                        trafdist = np.delete(trafdist, i, 0)
+                    else:
+                        trafdist[i, 1] = dist
+            
+            # Amount of aircraft we need to add
+            decrement_me = concurrent_ac - len(trafdist)
+            # This loop is for each wave
+            while decrement_me > 0:
+                # Pick a random node from possible_origins
+                idx_origin = random.randint(0, len(possible_origins)-1)
+                origin = possible_origins[idx_origin]
+                # Do the same thing for destination
+                idx_dest = random.randint(0, len(possible_destinations)-1)
+                destination = possible_destinations[idx_dest]
+                # Let's see how close they are
+                orig_node = ox.distance.nearest_nodes(G, origin[1], origin[0])
+                target_node = ox.distance.nearest_nodes(G, destination[1], destination[0])
+                try:
+                    length = nx.shortest_path_length(G=G, source=orig_node, target=target_node, weight='length')
+                except:
+                    # There is no solution to get from one node to the other
+                    print('No path found for these two waypoints. Trying again.')
+                    continue
+                
+                if length < min_dist:
+                    # Distance is too short, try again
+                    continue
+                # Remove destinations and origins
+                possible_origins.pop(idx_origin)
+                possible_destinations.pop(idx_dest)
+                # Append the new aircraft
+                trafgen.append(('D'+str(ac_no), start_time, origin, destination, length))
+                trafdist = np.vstack([trafdist, ['D'+str(ac_no),  length]])
+                ac_no += 1
+                decrement_me -= 1  
+            # Go to the next time step
+            timestep += 1
+            start_time += dt
+            
+        return trafgen
+    
+    def Graph2Traf2(self, G, concurrent_ac, aircraft_vel, max_time, dt, min_dist, 
+                   orig_points = None, dest_points = None):
+        """Creates random traffic using the nodes of graph G as origins and
+        destinations.
+    
+        Parameters
+        ----------
+        G : graphml
+            OSMNX graph, can be created using create_graph.py
+            
+        concurrent_ac : int
+            The approximate number of aircraft flying at the same time.
+            
+        aircraft_vel : int/float [m/s]
+            The approximate average velocity of aircraft
+            
+        max_time : int [s]
+            The timespan for aircraft generation.
+            
+        dt : int [s]
+            The time step to use. A smaller time step is faster but the number
+            of concurrent aircraft will be less stable. 
+            
+        min_dist : int/float [m]
+            The minimum distance a mission should have. This filters out the
+            very short missions. 
+            
+        orig_points : list
+            List of points to serve as the origin nodes. If not given, origin
+            nodes will be taken randomly from existing ones.
+            
+        dest_points : list
+            List of points to serve as destination nodes. If not given, destination
+            nodes will be taken randomly from existing ones.
+            
+        Output
+        ------
+        (ID, start_time, origin, destination, path_length)
+        
+        ID : str
+            The flight ID.
+            
+        start_time : int [s]
+            The simulation time at which the flight should start.
+            
+        origin : (lat,lon) [deg]
+            The origin of the flight.
+            
+        destination : (lat,lon) [deg]
+            The destination of the flight
+            
+        length : float [m]
+            The approximate length of the path.
+    
+        """
+        nodes = []
+
+        for node in G.nodes:
+            nodes.append((G.nodes[node]['y'], G.nodes[node]['x'], node))
+            
+        # Some parameters
+        timestep = 0
+        ac_no = 1
+        start_time = 0
+        
+        trafgen = []
+        trafdist = np.empty((0,2))
+
+        # Create orig_nodes and dest_nodes by using osmnx closest node
+        # These two should be np arrays with each row being one point lon lat
+        orig_nodes = ox.nearest_nodes(G, orig_points[:,0], orig_points[:,1])
+        
+        if dest_points is not None:
+            dest_nodes = ox.nearest_nodes(G, dest_points[:,0], dest_points[:,1])
+            destinations = []
+            for node in nodes:
+                if node[2] in dest_nodes:
+                    destinations.append(node)
+        else:
+            destinations = nodes.copy()
+
+        origins = []
+        for node in nodes:
+            if node[2] in orig_nodes:
+                origins.append(node)
+
         # This loop is for time steps
         while start_time <= max_time:
             possible_origins = origins.copy()
