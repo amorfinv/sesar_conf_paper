@@ -286,7 +286,7 @@ class PathPlanning:
            key=omsnx_keys_list[i]
            x=self.G._node[key]['x']
            y=self.G._node[key]['y']  
-           z = 25 # ft
+           z = 50 # ft
            parents=list(self.G._pred[key].keys())
            children=list(self.G._succ[key].keys())
            my_group={}

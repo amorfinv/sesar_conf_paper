@@ -1103,7 +1103,7 @@ def split_group_at_node(node_split, edges):
         bearing = group_gdf.loc[new_edge, 'bearing']
         edge_interior_angle = group_gdf.loc[new_edge, 'edge_interior_angle']
         int_bearing_diff = group_gdf.loc[new_edge, 'int_bearing_diff']
-        stroke_group_label = new_group_num
+        stroke_group_label = str(new_group_num)
 
         my_geodata.append([new_edge[0], new_edge[1], new_edge[2], geom, stroke_group_label, edge_interior_angle, int_bearing_diff, bearing, length])
     

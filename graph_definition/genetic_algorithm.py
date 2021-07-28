@@ -18,6 +18,7 @@ class Node:
 
 class GeneticAlgorithm:
     def __init__(self):
+        self.first = True
         nodes_lonlat = np.array([[16.33316675,48.22759827],
                                 [16.33720514,48.22755137],
                                 [16.34124351,48.22750432],
@@ -104,7 +105,7 @@ class GeneticAlgorithm:
         toolbox.register("mutate", tools.mutFlipBit, indpb = 0.05)
         
         # Do algorithm
-        pop = toolbox.population(n = 200)
+        pop = toolbox.population(n = 10)
         fitnesses = list(map(toolbox.evaluate, pop))
         print(fitnesses)
         for ind, fit in zip(pop, fitnesses):
@@ -164,6 +165,8 @@ class GeneticAlgorithm:
         
         
     def boollist(self):
+        if self.first == True:
+            return [1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
         return [random.randint(0,1) for i in range(len(self.edge_directions))]
         
     def CostFunction(self, bool_list):

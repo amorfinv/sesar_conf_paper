@@ -95,7 +95,7 @@ class BlueskySCNTools():
                     lines.append(start_time_txt + fvr)
                     
             # Add the waypoint
-            if any(alts):
+            if alts is not None:
                 wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]}\n'
             else:
                 wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]}\n'

@@ -16,16 +16,16 @@ bst = BlueskySCNTools.BlueskySCNTools()
 # Step 1: Import the graph we will be using
 dir_path = os.path.dirname(os.path.realpath(__file__))
 graph_path = dir_path.replace('scenario_definition',
-    'graph_definition/gis/streets/split_groups.graphml')
+    'graph_definition/gis/streets/directed_groups.graphml')
 G = ox.io.load_graphml(graph_path)
 edges = ox.graph_to_gdfs(G)[1]
 print('Graph loaded!')
 
 # Step 2: Generate traffic from it
-concurrent_ac = 5
-aircraft_vel = 10 # [m/s]
+concurrent_ac = 6
+aircraft_vel = 15 # [m/s]
 max_time = 3600 # [s]
-dt = 10
+dt = 5
 min_dist = 1000 # [m]
 
 # Origins are a number of points around the perimeter of the area
@@ -131,7 +131,7 @@ for flight in generated_traffic:
     #Add turnbool
     scenario_dict[flight[0]]['turnbool'] = turns
     #Add alts
-    scenario_dict[flight[0]]['alts'] = route[:,2]
+    scenario_dict[flight[0]]['alts'] = None
     
 print('All paths created!')
     
