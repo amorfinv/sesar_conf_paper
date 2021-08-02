@@ -400,7 +400,7 @@ class PathPlanning:
                 goal_id=i.index
             if start_id!=-1 and goal_id!=-1:
                 break
-        print(start_id)
+        # print(start_id)
         start_node=self.graph[start_id] 
         x_start=start_node.x
         y_start=start_node.y

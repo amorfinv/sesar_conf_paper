@@ -7,7 +7,7 @@ Created on Thu Jun  3 11:47:30 2021
 import osmnx as ox
 import numpy as np
 import BlueskySCNTools
-from path_planning import PathPlanning
+from beta_path_planning import PathPlanner
 import os
 
 # Initialize stuff
@@ -18,11 +18,13 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 graph_path = dir_path.replace('scenario_definition',
     'graph_definition/gis/streets/directed_groups.graphml')
 G = ox.io.load_graphml(graph_path)
-edges = ox.graph_to_gdfs(G)[1]
+nodes, edges = ox.graph_to_gdfs(G)
 print('Graph loaded!')
 
+# Step 2: Initalize the Path Planner class
+path_planner = PathPlanner(G, nodes, edges)
 
-for idx, concurrent_ac in enumerate([8,8,8,8,8,11,11,11,11,11]):
+for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
     # Step 2: Generate traffic from it
     aircraft_vel = 15 # [m/s]
     max_time = 3600 # [s]
@@ -108,7 +110,7 @@ for idx, concurrent_ac in enumerate([8,8,8,8,8,11,11,11,11,11]):
                     [16.35305335, 48.21827425]])
     
     generated_traffic, routes, turnslist = bst.Slow2Scn(G, edges, concurrent_ac, aircraft_vel, max_time, 
-                                       dt, min_dist, turn_factor, orig_coords)
+                                       dt, min_dist, turn_factor, path_planner, orig_coords)
     print('Traffic generated!')
     
     # Step 3: Loop through traffic, find path, add to dictionary

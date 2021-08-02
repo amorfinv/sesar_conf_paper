@@ -9,7 +9,7 @@ import random
 import osmnx as ox
 import networkx as nx
 import os 
-from path_planning import PathPlanning
+# from path_planning import PathPlanning
 nm = 1852
 ft = 1/0.3048
 
@@ -18,12 +18,12 @@ class BlueskySCNTools():
         return
     
     def Slow2Scn(self, G, edges, concurrent_ac, aircraft_vel, max_time, dt, 
-                 min_dist, turn_factor, orig_points = None, dest_points = None):
+                 min_dist, turn_factor, path_planner, orig_points = None, dest_points = None):
         nodes = []
 
         for node in G.nodes:
             nodes.append((G.nodes[node]['y'], G.nodes[node]['x'], node))
-            
+
         # Some parameters
         timestep = 0
         ac_no = 1
@@ -82,9 +82,13 @@ class BlueskySCNTools():
                 idx_dest = random.randint(0, len(possible_destinations)-1)
                 destination = possible_destinations[idx_dest]
 
+                origin_node = origin[2]
+                destination_node = destination[2]
+
                 length = 0
-                plan = PathPlanning(G,edges, origin[1], origin[0], destination[1], destination[0])
-                route,turns=plan.plan()
+                # plan = PathPlanning(G,edges, origin[1], origin[0], destination[1], destination[0])
+                # route,turns=plan.plan()
+                route, turns = path_planner.route(origin_node, destination_node)
                 for i in range(len(route)):
                     if i == 1:
                         continue

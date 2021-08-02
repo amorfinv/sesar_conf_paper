@@ -50,6 +50,8 @@ for i in range(len(best_solution)):
 
 new_edges = graph_funcs.set_direction2(edges, edge_directions)
 
+new_edges = graph_funcs.add_edge_interior_angles(new_edges)
+
 G_final = ox.graph_from_gdfs(nodes, new_edges)
 
 ox.save_graphml(G_final, filepath=path.join(gis_data_path, 'streets', 'directed_groups.graphml'))
