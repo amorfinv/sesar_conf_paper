@@ -9,15 +9,15 @@ import random
 import osmnx as ox
 import networkx as nx
 import os 
-# from path_planning import PathPlanning
+from path_planning import PathPlanning
 nm = 1852
 ft = 1/0.3048
 
 class BlueskySCNTools():
     def __init__(self):
         return
-    
-    def Slow2Scn(self, G, edges, concurrent_ac, aircraft_vel, max_time, dt, 
+
+    def Fast2Scn(self, G, concurrent_ac, aircraft_vel, max_time, dt, 
                  min_dist, turn_factor, path_planner, orig_points = None, dest_points = None):
         nodes = []
 
@@ -86,9 +86,103 @@ class BlueskySCNTools():
                 destination_node = destination[2]
 
                 length = 0
-                # plan = PathPlanning(G,edges, origin[1], origin[0], destination[1], destination[0])
-                # route,turns=plan.plan()
                 route, turns = path_planner.route(origin_node, destination_node)
+                for i in range(len(route)):
+                    if i == 1:
+                        continue
+                    length += self.kwikdist(route[i-1][1], route[i-1][0], route[i][1], route[i][0])
+
+                if length < min_dist:
+                    print("Distance is too short, trying again.")
+                    continue
+                
+                # Remove destinations and origins
+                possible_origins.pop(idx_origin)
+                possible_destinations.pop(idx_dest)
+                # Append the new aircraft
+                trafgen.append(('D'+str(ac_no), start_time, origin, destination, length))
+                routes.append(route)
+                turnslist.append(turns)
+                trafdist = np.vstack([trafdist, ['D'+str(ac_no),  length]])
+                ac_no += 1
+                decrement_me -= 1  
+            # Go to the next time step
+            timestep += 1
+            start_time += dt
+            
+        return trafgen, routes, turnslist
+
+    def Slow2Scn(self, G, edges, concurrent_ac, aircraft_vel, max_time, dt, 
+                 min_dist, turn_factor, orig_points = None, dest_points = None):
+        nodes = []
+
+        for node in G.nodes:
+            nodes.append((G.nodes[node]['y'], G.nodes[node]['x'], node))
+
+        # Some parameters
+        timestep = 0
+        ac_no = 1
+        start_time = 0
+        
+        trafgen = []
+        routes = []
+        turnslist = []
+        trafdist = np.empty((0,2))
+
+        # Create orig_nodes and dest_nodes by using osmnx closest node
+        # These two should be np arrays with each row being one point lon lat
+        orig_nodes = ox.nearest_nodes(G, orig_points[:,0], orig_points[:,1])
+        
+        if dest_points is not None:
+            dest_nodes = ox.nearest_nodes(G, dest_points[:,0], dest_points[:,1])
+            destinations = []
+            for node in nodes:
+                if node[2] in dest_nodes:
+                    destinations.append(node)
+        else:
+            destinations = nodes.copy()
+
+        origins = []
+        for node in nodes:
+            if node[2] in orig_nodes:
+                origins.append(node)
+
+        # This loop is for time steps
+        while start_time <= max_time:
+            possible_origins = origins.copy()
+            possible_destinations = destinations.copy()
+            
+            # We want to keep track of what aircraft might have reached their
+            # destinations.
+            # Skip first time step
+            if timestep > 0:
+                for aircraft in trafdist:
+                    i = np.where(np.all(trafdist==aircraft,axis=1))[0]
+                    # Subtract a dt*speed from length for each aircraft
+                    dist = float(aircraft[1]) - (aircraft_vel-turn_factor) * dt
+                    if dist < 0:
+                        # Aircraft probably reached its destination
+                        trafdist = np.delete(trafdist, i, 0)
+                    else:
+                        trafdist[i, 1] = dist
+            
+            # Amount of aircraft we need to add
+            decrement_me = concurrent_ac - len(trafdist)
+            # This loop is for each wave
+            while decrement_me > 0:
+                # Pick a random node from possible_origins
+                idx_origin = random.randint(0, len(possible_origins)-1)
+                origin = possible_origins[idx_origin]
+                # Do the same thing for destination
+                idx_dest = random.randint(0, len(possible_destinations)-1)
+                destination = possible_destinations[idx_dest]
+
+                origin_node = origin[2]
+                destination_node = destination[2]
+
+                length = 0
+                plan = PathPlanning(G,edges, origin[1], origin[0], destination[1], destination[0])
+                route,turns=plan.plan()
                 for i in range(len(route)):
                     if i == 1:
                         continue

@@ -108,11 +108,10 @@ for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
                     [16.32320989, 48.21011708],
                     [16.35545007, 48.22481353],
                     [16.35305335, 48.21827425]])
-    
-    generated_traffic, routes, turnslist = bst.Slow2Scn(G, edges, concurrent_ac, aircraft_vel, max_time, 
+    generated_traffic, routes, turnslist = bst.Fast2Scn(G, concurrent_ac, aircraft_vel, max_time, 
                                        dt, min_dist, turn_factor, path_planner, orig_coords)
     print('Traffic generated!')
-    
+
     # Step 3: Loop through traffic, find path, add to dictionary
     scenario_dict = dict()
     for i, flight in enumerate(generated_traffic):
