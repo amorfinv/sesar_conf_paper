@@ -741,6 +741,10 @@ class BlueskySCNTools():
             The required speed at each waypoint.
 
         """
+        # The buffer for waypoints after the turn doesn't need to be as big as
+        # the buffer for before. Same with speed_dist
+        future_turn_dist = turn_dist / 2
+        future_speed_dist = speed_dist / 2
         # Number of waypoints
         num_wpts = len(lats)
         # Array that holds the speeds
@@ -775,9 +779,9 @@ class BlueskySCNTools():
             while j < num_wpts:
                 dist2wpt = self.qdrdist(lats[j], lons[j], lats[j-1], lons[j-1], 'dist')
                 cumulative_distance += dist2wpt
-                if cumulative_distance < turn_dist:
+                if cumulative_distance < future_turn_dist:
                     turnbool[j] = 1
-                if cumulative_distance < speed_dist:
+                if cumulative_distance < future_speed_dist:
                     speeds[j] = turnspeed
                     j = j + 1
                 else:

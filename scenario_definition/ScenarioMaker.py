@@ -137,7 +137,7 @@ for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
     print('All paths created!')
         
     # Step 4: Create scenario file from dictionary
-    bst.Dict2Scn(f'Test_Scenario{idx}.scn', 
+    bst.Dict2Scn(f'Test_Scenario_{concurrent_ac}_{idx}.scn', 
                  scenario_dict)
     
     print('Scenario file created!')
