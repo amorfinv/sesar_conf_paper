@@ -713,13 +713,16 @@ def set_direction(edges, edge_directions):
 
 def set_direction2(edges, edge_directions):
 
+    # copy edges
+    edges_gdf_new = edges.copy()
+
     # Create list of stroke groups
-    stroke_groups = list(np.sort(np.unique(np.array(edges['stroke_group'].values))))
+    stroke_groups = list(np.sort(np.unique(np.array(edges_gdf_new['stroke_group'].values))))
     # We need to put edge_directions in the same order as the edges
     new_edge_directions = []
     for num_group, stroke_group_list in enumerate(stroke_groups):
         # get edges in specific group
-        edge_in_group = edges.loc[edges['stroke_group']== stroke_group_list]
+        edge_in_group = edges_gdf_new.loc[edges_gdf_new['stroke_group']== stroke_group_list]
 
         # get edge indices of stroke group in a list
         edge_uv = list(edge_in_group.index.values)
@@ -739,7 +742,7 @@ def set_direction2(edges, edge_directions):
     for num_group, stroke_group_list in enumerate(stroke_groups):
 
         # get edges in specific group
-        edge_in_group = edges.loc[edges['stroke_group']== stroke_group_list]
+        edge_in_group = edges_gdf_new.loc[edges_gdf_new['stroke_group']== stroke_group_list]
 
         # get edge indices of stroke group in a list
         edge_uv = list(edge_in_group.index.values)
@@ -858,7 +861,7 @@ def node_gdf_format_from_gpkg(nodes):
 def simplify_graph(nodes, edges, angle_cut_off = 120):
     '''
     remove degree-2 edges with int angle greater than 120, requires fresh add_edge_interior angles
-    Basically consolidates when deleting manually
+    Basically consolidates when deleting edges manually in qgis
     '''
     edges_gdf_new = edges.drop(['length', 'edge_interior_angle'], axis=1).copy()
     nodes_gdf_new = nodes.copy()
@@ -1182,6 +1185,44 @@ def manual_edits(nodes, edges):
 
     return nodes_gdf_new, edges_gdf_new
 
+def manual_edits_after_genetic(nodes, edges):
+    '''
+    Manual edits after genetic algorithm is done for edge gdf and node gdf
+    '''
+    # make copy of nodes edges
+    nodes_gdf_new = nodes.copy()
+    edges_gdf_new = edges.copy()
+
+    ##################### SPLITTING AN EDGE HERE and add new group ###############
+
+    # select edge to split, the new geometry and location along linestring
+    edge_to_split = (60631071, 33345301, 0)
+    new_node_osmid = 13
+    split_loc = 1
+
+    # split edge
+    node_new, row_new1, row_new2 = split_edge(edge_to_split, split_loc, new_node_osmid, nodes, edges)
+
+    # append nodes and edges and remove split edge
+    curr_group = edges_gdf_new.loc[edge_to_split,'stroke_group']
+
+    row_new1['stroke_group'] = curr_group
+    row_new2['stroke_group'] = curr_group
+
+    nodes_gdf_new = nodes_gdf_new.append(node_new)
+    edges_gdf_new = edges_gdf_new.append([row_new1, row_new2])
+    edges_gdf_new.drop(index=edge_to_split, inplace=True)
+
+    ### split grpoup at new node
+    new_group_gdf = split_group_at_node_do_not_use(new_node_osmid, edges_gdf_new)
+    new_group_edges = new_group_gdf.index.values
+
+    # drop new_group dataframe new_group_gdf to edges_gdf
+    edges_gdf_new.drop(index=new_group_edges, inplace=True)
+    edges_gdf_new = edges_gdf_new.append(new_group_gdf)
+
+    return nodes_gdf_new, edges_gdf_new
+
 def split_edge(edge_to_split, split_loc, new_node_osmid, nodes, edges):
     '''
 
@@ -1259,3 +1300,72 @@ def new_edge_straight(u, v, nodes, edges):
     row_new.set_index(['u', 'v', 'key'], inplace=True)
 
     return row_new
+
+def split_group_at_node_do_not_use(node_split, edges):
+
+    '''Split a group at a node...DO NOT USE'''
+
+    edges_gdf_new = edges.copy()
+
+    stroke_group_list = list(edges_gdf_new.loc[:,'stroke_group'].values)
+    unique_stroke = []
+
+    for stroke_group in stroke_group_list:
+        if not stroke_group in unique_stroke:
+            unique_stroke.append(stroke_group)
+    
+    new_group_num = len(unique_stroke)
+
+    # find relevant edges of node_split
+    edge_uv = list(edges_gdf_new.index.values)
+    edges_with_node = [item for item in edge_uv if node_split in item]
+
+    edge_back = edges_with_node[0]
+    edge_front = edges_with_node[1]
+
+    # edge front and subsequent edges get a new group
+    current_group = edges_gdf_new.loc[edge_front, 'stroke_group']        
+    
+    group_gdf = edges_gdf_new[edges_gdf_new['stroke_group']==current_group]
+    group_uv = list(group_gdf.index.values)
+
+    # organize group
+    # check if edge in front continues
+    end_node = edge_front[1]
+    end_edges_to_merge = [edge_front]
+
+    while end_node:
+        node_inspect = end_node
+
+        edges_in_merge1 = [item for item in group_uv if node_inspect in item]
+        try:
+            edge_1 = edges_in_merge1[0]
+            edge_2 = edges_in_merge1[1]
+
+            if node_inspect == edge_1[0]:
+                edge_front = edge_1
+            else:
+                edge_front = edge_2
+            end_node = edge_front[1]
+            end_edges_to_merge.append(edge_front)
+        except IndexError:
+            end_node = False  
+
+    # edges to merge
+    new_group_edges = end_edges_to_merge
+    my_geodata = []
+
+    for new_edge in new_group_edges:
+        length = group_gdf.loc[new_edge, 'length']
+        geom = group_gdf.loc[new_edge, 'geometry']
+        edge_interior_angle = group_gdf.loc[new_edge, 'edge_interior_angle']
+        stroke_group_label = str(new_group_num)
+
+        my_geodata.append([new_edge[0], new_edge[1], new_edge[2], geom, stroke_group_label, edge_interior_angle, length])
+    
+    # create edge geodataframe
+    column_names = ['u', 'v', 'key', 'geometry', 'stroke_group', 'edge_interior_angle', 'length']
+    new_group_gdf = gpd.GeoDataFrame(my_geodata, columns=column_names, crs=edges.crs)
+    new_group_gdf.set_index(['u', 'v', 'key'], inplace=True)
+
+    return new_group_gdf   

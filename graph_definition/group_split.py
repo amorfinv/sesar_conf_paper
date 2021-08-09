@@ -3,6 +3,7 @@ import geopandas as gpd
 from os import path
 import graph_funcs
 import copy
+import numpy as np
 
 # def main():
 # gis data pah
@@ -48,11 +49,19 @@ for i in range(len(best_solution)):
             direction = copy.copy(edge_directions[i])
             edge_directions[i] = (direction[1], direction[0], direction[2])
 
+# edit genetic results for one group 114 (TODO: FIX THIS IN FUTURE)
+# IDEA IS THAT DEGREE 90 split is done after so these things can be avoided
+edge_directions[edge_directions.index((249607807, 33182067, 0))] = (33182067, 249607807, 0)
+
 new_edges = graph_funcs.set_direction2(edges, edge_directions)
 
 new_edges = graph_funcs.add_edge_interior_angles(new_edges)
 
+### final edits missed on past edits
+nodes, new_edges = graph_funcs.manual_edits_after_genetic(nodes, new_edges)
+
 G_final = ox.graph_from_gdfs(nodes, new_edges)
+ox.distance.add_edge_lengths(G_final)
 
 ox.save_graphml(G_final, filepath=path.join(gis_data_path, 'streets', 'directed_groups.graphml'))
 
