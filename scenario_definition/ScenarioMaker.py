@@ -24,13 +24,14 @@ print('Graph loaded!')
 # Step 2: Initalize the Path Planner class
 path_planner = PathPlanner(G, nodes, edges)
 
+
 for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
     # Step 2: Generate traffic from it
     aircraft_vel = 15 # [m/s]
     max_time = 3600 # [s]
     dt = 5
     min_dist = 1000 # [m]
-    turn_factor = 1.9
+    turn_factor = 0
     
     # Origins are a number of points around the perimeter of the area
     orig_coords = np.array([[16.34563374, 48.2064161],
@@ -135,10 +136,11 @@ for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
         scenario_dict[flight[0]]['alts'] = None
         
     print('All paths created!')
-        
-    # Step 4: Create scenario file from dictionary
-    bst.Dict2Scn(f'Test_Scenario_{concurrent_ac}_{idx}.scn', 
-                 scenario_dict)
+    
+    for resometh in ['NONE', 'MVP', 'ORCA']:
+        # Step 4: Create scenario file from dictionary
+        bst.Dict2Scn(f'Test_Scenario_{concurrent_ac}_{idx}_{resometh}.scn', 
+                     scenario_dict, resometh)
     
     print('Scenario file created!')
     

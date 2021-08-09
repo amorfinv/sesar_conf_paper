@@ -245,8 +245,8 @@ class BlueskySCNTools():
         # Speeds
         turn_speed = 10 # [kts]
         cruise_speed = 30 # [kts]
-        speed_dist = 10 # [m]
-        turn_dist = 10 # [m]
+        speed_dist = 15 # [m]
+        turn_dist = 15 # [m]
         speeds, turnbool = self.TurnSpeedBuffer(lats, lons, turnbool, alts, 
                             turn_speed, cruise_speed, speed_dist, turn_dist)
         
@@ -296,14 +296,14 @@ class BlueskySCNTools():
             prev_wpt_turn = turnbool[i]
         
         # Delete aircraft at destination waypoint
-        lines.append(start_time_txt + f'{drone_id} ATDIST {lats[-1]} {lons[-1]} {10/nm} DEL {drone_id}\n')
+        lines.append(start_time_txt + f'{drone_id} ATDIST {lats[-1]} {lons[-1]} {16/nm} DEL {drone_id}\n')
         # Enable vnav and lnav
         lines.append(start_time_txt + vnav)
         lines.append(start_time_txt + lnav)
 
         return lines
     
-    def Dict2Scn(self, filepath, dictionary):
+    def Dict2Scn(self, filepath, dictionary, resometh = None):
         """Creates a scenario file from dictionary given that dictionary
         has the correct format.
     
@@ -334,7 +334,12 @@ class BlueskySCNTools():
         
         with open(filepath, 'w+') as f:
             f.write('00:00:00>HOLD\n00:00:00>PAN 48.223775 16.337976\n00:00:00>ZOOM 50\n')
-            f.write('00:00:00>ASAS ON\n00:00:00>RESO SPEEDBASED\n')
+            if resometh == 'MVP':
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO MVP\n00:00:00>RMETHH SPD\n')
+            elif resometh == 'ORCA':
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO ORCASPEEDBASED\n')
+            else:
+                f.write('00:00:00>ASAS ON\n')
             for drone_id in dictionary:
                 try:
                     start_time = dictionary[drone_id]['start_time']
@@ -743,8 +748,8 @@ class BlueskySCNTools():
         """
         # The buffer for waypoints after the turn doesn't need to be as big as
         # the buffer for before. Same with speed_dist
-        future_turn_dist = turn_dist / 2
-        future_speed_dist = speed_dist / 2
+        future_turn_dist = turn_dist
+        future_speed_dist = speed_dist
         # Number of waypoints
         num_wpts = len(lats)
         # Array that holds the speeds
