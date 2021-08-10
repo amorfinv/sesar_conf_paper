@@ -10,11 +10,24 @@ import osmnx as ox
 import networkx as nx
 import os 
 from path_planning import PathPlanning
+import json
 nm = 1852
 ft = 1/0.3048
 
 class BlueskySCNTools():
     def __init__(self):
+        # bring in nodes and edges dictionary
+        # Opening edges.JSON as a dictionary
+        with open('../airspace_design/edges.json', 'r') as filename:
+            self.edge_dict = json.load(filename)
+
+        # Opening nodes.JSON as a dictionary
+        with open('../airspace_design/nodes.json', 'r') as filename:
+            self.node_dict = json.load(filename)
+
+        # Opening layers.JSON as a dictionary
+        with open('../airspace_design/layers.json', 'r') as filename:
+            self.layers_dict = json.load(filename)       
         return
 
     def Fast2Scn(self, G, concurrent_ac, aircraft_vel, max_time, dt, 
@@ -274,7 +287,19 @@ class BlueskySCNTools():
         # First, we need to create the drone, Matrice 600 going 30 kts for now.
         # Let's calculate its required heading.
         qdr = self.qdrdist(lats[0], lons[0], lats[1], lons[1], 'qdr')
-        cre_text = f'CRE {drone_id} M600 {lats[0]} {lons[0]} {qdr} 25 {turn_speed}\n'
+
+        if airspace:
+            # airspace is on
+            first_edge_id = edge_ids[1]
+            edge_height = self.edge_dict[f'{first_edge_id}']['layer_height']
+
+            start_alt = self.layers_dict['config'][edge_height]['starting_cruise_layer']
+
+            cre_text = f'CRE {drone_id} M600 {lats[0]} {lons[0]} {qdr} {start_alt} {turn_speed}\n'
+        else:
+            # airspace is off
+            cre_text = f'CRE {drone_id} M600 {lats[0]} {lons[0]} {qdr} 25 {turn_speed}\n'
+        
         lines.append(start_time_txt + cre_text)
         
         # Then we need to for loop through all the lats
@@ -296,10 +321,11 @@ class BlueskySCNTools():
             if airspace:
                 # Airspace is on
                 # add edge ids to the waypoint
+                stroke_group = self.edge_dict[f'{edge_ids[i]}']['stroke_group']
                 if alts is not None:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {edge_ids[i]}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {edge_ids[i]} {stroke_group}\n'
                 else:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {edge_ids[i]}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {edge_ids[i]} {stroke_group}\n'
                 
             else:
                 # Airspace is off
