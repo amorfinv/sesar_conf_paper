@@ -245,8 +245,8 @@ class BlueskySCNTools():
         # Speeds
         turn_speed = 10 # [kts]
         cruise_speed = 30 # [kts]
-        speed_dist = 15 # [m]
-        turn_dist = 15 # [m]
+        speed_dist = 30 # [m]
+        turn_dist = 30 # [m]
         speeds, turnbool = self.TurnSpeedBuffer(lats, lons, turnbool, alts, 
                             turn_speed, cruise_speed, speed_dist, turn_dist)
         
@@ -287,9 +287,9 @@ class BlueskySCNTools():
                     
             # Add the waypoint
             if alts is not None:
-                wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]}\n'
+                wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {30}\n'
             else:
-                wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]}\n'
+                wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {30}\n'
             lines.append(start_time_txt + wpt_txt)
             
             # Set prev waypoint type value
