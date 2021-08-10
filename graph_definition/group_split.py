@@ -65,8 +65,6 @@ nodes, new_edges = graph_funcs.manual_edits_after_genetic(nodes, new_edges)
 new_edges['layer_height'] = graph_funcs.allocate_group_height(nodes, new_edges, rotation_val=0)
 # set group 80 to height 2
 new_edges.at[(1114680094, 3704365814, 0), 'layer_height'] = 'height 2'
-# set group 82 to height 1
-new_edges.at[(2451408746, 685161, 0), 'layer_height'] = 'height 1'
 
 G_final = ox.graph_from_gdfs(nodes, new_edges)
 ox.distance.add_edge_lengths(G_final)

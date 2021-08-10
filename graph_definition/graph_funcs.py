@@ -1352,7 +1352,31 @@ def manual_edits_after_genetic(nodes, edges):
     edges_gdf_new.drop(index=edge_to_split, inplace=True)
 
     ### split grpoup at new node
-    new_group_gdf = split_group_at_node_do_not_use(new_node_osmid, edges_gdf_new)
+    new_group_gdf = split_group_at_node_do_not_use(new_node_osmid, edges_gdf_new, curr_group)
+    new_group_edges = new_group_gdf.index.values
+
+    # drop new_group dataframe new_group_gdf to edges_gdf
+    edges_gdf_new.drop(index=new_group_edges, inplace=True)
+    edges_gdf_new = edges_gdf_new.append(new_group_gdf)
+
+    ######## SPLIT GROUP AT NODE #################################################
+    node_split = 2383639011
+    # it actually splits the node before this one...need to fix split_group_at_node
+    
+    ### split grpoup at node
+    new_group_gdf = split_group_at_node_do_not_use(node_split, edges_gdf_new, '18')
+    new_group_edges = new_group_gdf.index.values
+
+    # drop new_group dataframe new_group_gdf to edges_gdf
+    edges_gdf_new.drop(index=new_group_edges, inplace=True)
+    edges_gdf_new = edges_gdf_new.append(new_group_gdf)
+
+    ######## SPLIT GROUP AT NODE #################################################
+    node_split = 685161
+    # it actually splits the node before this one...need to fix split_group_at_node
+    
+    ### split grpoup at node
+    new_group_gdf = split_group_at_node_do_not_use(node_split, edges_gdf_new, '12')
     new_group_edges = new_group_gdf.index.values
 
     # drop new_group dataframe new_group_gdf to edges_gdf
@@ -1439,27 +1463,32 @@ def new_edge_straight(u, v, nodes, edges):
 
     return row_new
 
-def split_group_at_node_do_not_use(node_split, edges):
+def split_group_at_node_do_not_use(node_split, edges, curr_group):
 
-    '''Split a group at a node...DO NOT USE'''
+    '''Split a group at a node...DO NOT USE FOR NOW..need to fix'''
 
+    # create copy of edges
     edges_gdf_new = edges.copy()
 
-    stroke_group_list = list(edges_gdf_new.loc[:,'stroke_group'].values)
-    unique_stroke = []
+    # get all unique stroke groups in a list
+    unique_stroke = list(np.unique(edges_gdf_new.loc[:,'stroke_group']))
 
-    for stroke_group in stroke_group_list:
-        if not stroke_group in unique_stroke:
-            unique_stroke.append(stroke_group)
-    
+    # new group number is equal to length of group list since first group is zero
     new_group_num = len(unique_stroke)
 
     # find relevant edges of node_split
     edge_uv = list(edges_gdf_new.index.values)
     edges_with_node = [item for item in edge_uv if node_split in item]
 
-    edge_back = edges_with_node[0]
-    edge_front = edges_with_node[1]
+    # remove edges that are not part of group
+    edges_group = []
+    for edge in edges_with_node:
+        if edges_gdf_new.loc[edge, 'stroke_group'] == curr_group:
+            edges_group.append(edge)
+    
+    # check that only edges belonging to group
+    edge_back = edges_group[0]
+    edge_front = edges_group[1]
 
     # edge front and subsequent edges get a new group
     current_group = edges_gdf_new.loc[edge_front, 'stroke_group']        
