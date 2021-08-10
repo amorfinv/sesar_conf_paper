@@ -754,6 +754,8 @@ class BlueskySCNTools():
         num_wpts = len(lats)
         # Array that holds the speeds
         speeds = [cruisespeed] * num_wpts
+        # Copy the turnbool over
+        turnbool_new = turnbool.copy()
         for i in range(num_wpts):
             if turnbool[i] == 0 or turnbool[i] == False:
                 # We're only interested in turn waypoints
@@ -770,7 +772,7 @@ class BlueskySCNTools():
                 dist2wpt = self.qdrdist(lats[j], lons[j], lats[j+1], lons[j+1], 'dist')
                 cumulative_distance += dist2wpt
                 if cumulative_distance < turn_dist:
-                    turnbool[j] = 1
+                    turnbool_new[j] = 1
                 if cumulative_distance < speed_dist:
                     speeds[j] = turnspeed
                     j = j - 1
@@ -785,14 +787,14 @@ class BlueskySCNTools():
                 dist2wpt = self.qdrdist(lats[j], lons[j], lats[j-1], lons[j-1], 'dist')
                 cumulative_distance += dist2wpt
                 if cumulative_distance < future_turn_dist:
-                    turnbool[j] = 1
+                    turnbool_new[j] = 1
                 if cumulative_distance < future_speed_dist:
                     speeds[j] = turnspeed
                     j = j + 1
                 else:
                     break                
               
-        return speeds, turnbool
+        return speeds, turnbool_new
 
     def kwikdist(self, lata, lona, latb, lonb):
         """

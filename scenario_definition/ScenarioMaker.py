@@ -9,6 +9,7 @@ import numpy as np
 import BlueskySCNTools
 from beta_path_planning import PathPlanner
 import os
+import pickle
 
 # Initialize stuff
 bst = BlueskySCNTools.BlueskySCNTools()
@@ -25,8 +26,13 @@ print('Graph loaded!')
 path_planner = PathPlanner(G, nodes, edges)
 
 
-for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
-    # Step 2: Generate traffic from it
+for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+                                      8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                                      11,11,11,11,11,11,11,11,11,11]):
+# ----------------------------------------------------------------------------
+# If using existing pickles, comment out everything between the long lines (below)
+
+    #Step 2: Generate traffic from it
     aircraft_vel = 15 # [m/s]
     max_time = 3600 # [s]
     dt = 5
@@ -110,10 +116,10 @@ for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
                     [16.35545007, 48.22481353],
                     [16.35305335, 48.21827425]])
     generated_traffic, routes, turnslist = bst.Fast2Scn(G, concurrent_ac, aircraft_vel, max_time, 
-                                       dt, min_dist, turn_factor, path_planner, orig_coords)
+                                        dt, min_dist, turn_factor, path_planner, orig_coords)
     print('Traffic generated!')
 
-    # Step 3: Loop through traffic, find path, add to dictionary
+    # Step 3.1: Loop through traffic, find path, add to dictionary
     scenario_dict = dict()
     for i, flight in enumerate(generated_traffic):
         # First get the route and turns
@@ -137,9 +143,22 @@ for idx, concurrent_ac in enumerate([5,5,5,5,5,8,8,8,8,8,11,11,11,11,11]):
         
     print('All paths created!')
     
+    # Step 3.2: Pickle the traffic dictionary and save it in case we need it
+    # later on
+    with open(f'Pickles/Test_Scenario_{concurrent_ac}_{idx+1}.pickle', 'wb') as f:
+        pickle.dump(scenario_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+# If using the existing pickles, comment out everything between the long lines (above)
+# ----------------------------------------------------------------------------
+    # Step 3.3: Load pickle dump to use for each file. If this is uncommented, then
+    # comment out all previous lines inside the for loop, as we don't need to generate
+    # traffic again.
+    # with open(f'Pickles/Test_Scenario_{concurrent_ac}_{idx+1}.pickle', 'rb') as f:
+    #     scenario_dict = pickle.load(f)
+    
     for resometh in ['NONE', 'MVP', 'ORCA']:
         # Step 4: Create scenario file from dictionary
-        bst.Dict2Scn(f'Test_Scenario_{concurrent_ac}_{idx}_{resometh}.scn', 
+        bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}.scn', 
                      scenario_dict, resometh)
     
     print('Scenario file created!')
