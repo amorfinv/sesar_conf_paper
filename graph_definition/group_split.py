@@ -49,9 +49,10 @@ for i in range(len(best_solution)):
             direction = copy.copy(edge_directions[i])
             edge_directions[i] = (direction[1], direction[0], direction[2])
 
-# edit genetic results for one group 114 (TODO: FIX THIS IN FUTURE)
+# edit genetic results for some small groups 80, and 114 (TODO: FIX METHOD THIS IN FUTURE)
 # IDEA IS THAT DEGREE 90 split is done after so these things can be avoided
-edge_directions[edge_directions.index((249607807, 33182067, 0))] = (33182067, 249607807, 0)
+edge_directions[edge_directions.index((3704365814, 1114680094, 0))] = (1114680094, 3704365814, 0) # 80
+edge_directions[edge_directions.index((249607807, 33182067, 0))] = (33182067, 249607807, 0) # 114
 
 new_edges = graph_funcs.set_direction2(edges, edge_directions)
 
@@ -61,7 +62,11 @@ new_edges = graph_funcs.add_edge_interior_angles(new_edges)
 nodes, new_edges = graph_funcs.manual_edits_after_genetic(nodes, new_edges)
 
 ### allocate group heights
-new_edges = graph_funcs.allocate_group_height(nodes, new_edges, rotation_val=0)
+new_edges['layer_height'] = graph_funcs.allocate_group_height(nodes, new_edges, rotation_val=0)
+# set group 80 to height 2
+new_edges.at[(1114680094, 3704365814, 0), 'layer_height'] = 'height 2'
+# set group 82 to height 1
+new_edges.at[(2451408746, 685161, 0), 'layer_height'] = 'height 1'
 
 G_final = ox.graph_from_gdfs(nodes, new_edges)
 ox.distance.add_edge_lengths(G_final)

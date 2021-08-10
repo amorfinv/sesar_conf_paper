@@ -174,6 +174,7 @@ def allocate_edge_height(edges_gdf, rotation_val=0):
 def allocate_group_height(nodes_gdf, edges_gdf, rotation_val=0):
     '''
     Arguments:
+        -nodes_gdf: node gdf containing information about x,y locations.
         -edges_gdf: edge geodataframe with group numbers.
         -rotation_val: rotation of bounds (uniform). Must be between -45° and 45°.
 
@@ -201,6 +202,8 @@ def allocate_group_height(nodes_gdf, edges_gdf, rotation_val=0):
             ░░░░░/░░░░░░░░│░░░░░░░░\░░░░░
           low_bound_2     S    high_bound_1
 
+    Angles start at east and go counter-clockwise
+
     Shows border between height 1 and height 2 layers. For example if rotation angle is zero:
         -low_bound_1 = 45°
         -high_bound_1 = 135°
@@ -212,13 +215,7 @@ def allocate_group_height(nodes_gdf, edges_gdf, rotation_val=0):
 
     It is not recommended to use this method for a large city-wide graph. However, it will be useful to optimize sub graphs.
     
-    Returns geodataframes of edges. These can be used to create a new graph outisde function.
-
-    TODO: Make it so that arbitrary rotation angles can be applied. 
-    At the moment a uniform rotation to an orhtogonal axis is used for cutoff. However, there is no reason why this needs to be orthogonal.
-    This new addition will make optimization more difficult and perhaps not very necessary. This method is meant to be an initial
-    optimization. After this optimization, some refinement is needed to fix some edges.
-    Exception handling. So if rotation angle is too small/large then choose a correct value.
+    Returns layer_height allocation gdf that can be added to the original gdf
     '''
 
     # get borders to divide layer allocation (see image in comments)
@@ -230,39 +227,43 @@ def allocate_group_height(nodes_gdf, edges_gdf, rotation_val=0):
     # get numpy array of group numbers
     group_numbers = np.unique(edges_gdf['stroke_group'])
 
-    # build sub gdf of only group numbers
-    group_num = group_numbers[0]
+    # See which height each group belongs to
+    group_heights = {}
+    for group_num in group_numbers:
 
-    start_node, end_node = get_group_border_nodes(group_num, edges_gdf)
+        # get start and end node
+        start_node, end_node = get_group_border_nodes(group_num, edges_gdf)
 
-    orig = (nodes_gdf.loc[start_node].y, nodes_gdf.loc[start_node].x)
-    dest = (nodes_gdf.loc[end_node].y, nodes_gdf.loc[end_node].x)
+        orig = (nodes_gdf.loc[start_node].y, nodes_gdf.loc[start_node].x)
+        dest = (nodes_gdf.loc[end_node].y, nodes_gdf.loc[end_node].x)
 
-    group_bearing = get_bearing(orig, dest)
-    if 0 <= group_bearing <= 90:
-        group_bearing = 90 - group_bearing
-    elif 90 < group_bearing <= 360:
-        group_bearing = 360 - (group_bearing - 90)
+        # get group bearing (from first to last node) and shift coordinate system of osmnx funciton
+        group_bearing = get_bearing(orig, dest)
+        if 0 <= group_bearing <= 90:
+            group_bearing = 90 - group_bearing
+        elif 90 < group_bearing <= 360:
+            group_bearing = 360 - (group_bearing - 90)
+        
+        # allocate layer depending on bounds
+        if low_bound_1 < group_bearing < high_bound_1 or low_bound_2 < group_bearing < high_bound_2:
+            layer_loc = 'height 1'
+        else:
+            layer_loc = 'height 2'
+
+        group_heights[group_num] = layer_loc
     
-    group_bearing = 90 - group_bearing if 0 <= group_bearing <= 90 else 0
-    print(group_bearing)
+    # get layer_allocation
+    layer_allocation = edges_gdf['stroke_group'].apply(lambda group_num: group_heights[group_num])
 
-    # find first node of group and last node
-    if low_bound_1 < group_bearing < high_bound_1 or low_bound_2 < group_bearing < high_bound_2:
-        layer_loc = 'height 1'
-    else:
-        layer_loc = 'height 2'
-
-    print(layer_loc)
-    # allocate layers
-    layer_allocation.append(layer_loc)
-    print(ccccc)
-
-    # get bearing difference index
-    
-    return layer_allocation, 
+    return layer_allocation
 
 def get_group_border_nodes(group_num, edges_gdf):
+
+    '''
+    Given a group number and the edge gdf the function gives the id of the first and last node
+    of the directed graph.
+    TODO: consolidate into one while loop
+    '''
     
     # get a gdf of just the stroke group and just it's values
     group_gdf = edges_gdf[edges_gdf['stroke_group']==group_num]
@@ -270,7 +271,7 @@ def get_group_border_nodes(group_num, edges_gdf):
 
     # get initial start and end node from first edge
     idx = 0
-    start_node = group_uv[0][0]
+    start_node = group_uv[idx][0]
     group_uv_start = group_uv[:idx] + group_uv[idx + 1:]
     start_flag =  True
     while start_flag:
