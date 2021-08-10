@@ -24,6 +24,7 @@ class PathPlanner():
 
         # get route as a list of osmids
         osmid_route = ox.shortest_path(self.G, origin_node, dest_node)
+
         try:
             length_route = len(osmid_route)
         except TypeError:
@@ -31,24 +32,31 @@ class PathPlanner():
 
         if length_route > 1:
             print('Path found!')
-            # get all edges and their geometry
+            # get all edges and their geometry ad edge ids for waypoints (fill in first value as zero)
             edge_list = []
             geom_list = []
+            edge_ids = ['']
 
             for idx in range(len(osmid_route) - 1):
-                
                 # get edge
                 edge = (osmid_route[idx], osmid_route[idx + 1], 0)
                 
                 # get geometry of edge
                 line_geom = self.edge_gdf.loc[edge, 'geometry']
 
+                # get edge id for waypotints. equal to amount of coordinates minues 1
+                len_geom = len(line_geom.coords)
+                edge_id = [f'{edge[0]}-{edge[1]}' for _ in range(len_geom - 1)]
+
                 # get all edges
                 edge_list.append(edge)
 
                 # get geometry list
                 geom_list.append(line_geom)
-            
+
+                # append edge_ids
+                edge_ids += edge_id
+
             # combine geometry them into one linestring list
             merged_line = ops.linemerge(MultiLineString(geom_list))
             merged_line_list = list(merged_line.coords)
@@ -59,7 +67,6 @@ class PathPlanner():
 
             # create turnbool based on interior angle between edges, origin is zero
             turnbool = [0]
-        
             for idx in range(len(merged_line_list)-2):
                 line_string_1 = [merged_line_list[idx], merged_line_list[idx + 1]]
                 line_string_2 = [merged_line_list[idx+1], merged_line_list[idx + 2]]
@@ -75,12 +82,14 @@ class PathPlanner():
 
             # add a zero for turnbool of destination
             turnbool.append(0)
+
         else:
             route = []
             turnbool = []
+            edge_ids = []
             print('No path Found!')
 
-        return route, turnbool
+        return route, turnbool, edge_ids
 
 """
 The below function calculates the joining angle between

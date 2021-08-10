@@ -34,6 +34,8 @@ class BlueskySCNTools():
         turnslist = []
         trafdist = np.empty((0,2))
 
+        edge_ids_list = []
+
         # Create orig_nodes and dest_nodes by using osmnx closest node
         # These two should be np arrays with each row being one point lon lat
         orig_nodes = ox.nearest_nodes(G, orig_points[:,0], orig_points[:,1])
@@ -86,7 +88,7 @@ class BlueskySCNTools():
                 destination_node = destination[2]
 
                 length = 0
-                route, turns = path_planner.route(origin_node, destination_node)
+                route, turns, edge_ids = path_planner.route(origin_node, destination_node)
                 for i in range(len(route)):
                     if i == 1:
                         continue
@@ -95,7 +97,6 @@ class BlueskySCNTools():
                 if length < min_dist:
                     print("Distance is too short, trying again.")
                     continue
-                
                 # Remove destinations and origins
                 possible_origins.pop(idx_origin)
                 possible_destinations.pop(idx_dest)
@@ -104,13 +105,14 @@ class BlueskySCNTools():
                 routes.append(route)
                 turnslist.append(turns)
                 trafdist = np.vstack([trafdist, ['D'+str(ac_no),  length]])
+                edge_ids_list.append(edge_ids)
                 ac_no += 1
                 decrement_me -= 1  
             # Go to the next time step
             timestep += 1
             start_time += dt
             
-        return trafgen, routes, turnslist
+        return trafgen, routes, turnslist, edge_ids_list
 
     def Slow2Scn(self, G, edges, concurrent_ac, aircraft_vel, max_time, dt, 
                  min_dist, turn_factor, orig_points = None, dest_points = None):
@@ -208,7 +210,7 @@ class BlueskySCNTools():
             
         return trafgen, routes, turnslist
 
-    def Drone2Scn(self, drone_id, start_time, lats, lons, turnbool, alts = None):
+    def Drone2Scn(self, drone_id, start_time, lats, lons, turnbool, alts = None, edge_ids=None, airspace=False):
         """Converts arrays to Bluesky scenario files. The first
         and last waypoints will be taken as the origin and 
         destination of the drone.
@@ -236,6 +238,12 @@ class BlueskySCNTools():
             
         alts : float array/list, optional [ft]
             Defines the required altitude at waypoints.
+
+        edge_ids: string array/list
+            Each entry is the edge id. Only gets used if airspace=True
+
+        airspace: Boolean, optional
+            Flag that decides to use ADDWPTM2 command.
     
         """
         
@@ -284,12 +292,23 @@ class BlueskySCNTools():
                 if prev_wpt_turn == True:
                     # We had a turn waypoint initially, change to flyover mode
                     lines.append(start_time_txt + fvr)
-                    
-            # Add the waypoint
-            if alts is not None:
-                wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {30}\n'
+
+            if airspace:
+                # Airspace is on
+                # add edge ids to the waypoint
+                if alts is not None:
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {edge_ids[i]}\n'
+                else:
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {edge_ids[i]}\n'
+                
             else:
-                wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {30}\n'
+                # Airspace is off
+                # Add the waypoint normally
+                if alts is not None:
+                    wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]}\n'
+                else:
+                    wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]}\n'
+            
             lines.append(start_time_txt + wpt_txt)
             
             # Set prev waypoint type value
@@ -303,7 +322,7 @@ class BlueskySCNTools():
 
         return lines
     
-    def Dict2Scn(self, filepath, dictionary, resometh = None):
+    def Dict2Scn(self, filepath, dictionary, resometh = None, airspace = False):
         """Creates a scenario file from dictionary given that dictionary
         has the correct format.
     
@@ -327,6 +346,10 @@ class BlueskySCNTools():
                 dictionary['drone_id']['alts'] = alts
                 
             Set alts as None if no altitude constraints are needed.
+        
+        airsace : bool
+            A flag that decides to use the ADDWPT2 command that contains information 
+            about airspace structure
     
         """
         if filepath[-4:] != '.scn':
@@ -347,13 +370,13 @@ class BlueskySCNTools():
                     lons = dictionary[drone_id]['lons']
                     turnbool = dictionary[drone_id]['turnbool']
                     alts = dictionary[drone_id]['alts']
+                    edge_ids = dictionary[drone_id]['edge_ids']
                 except:
                     print('Key error. Make sure the dictionary is formatted correctly.')
                     return
-                
-                lines = self.Drone2Scn(drone_id, start_time, lats, lons, turnbool, alts)
+                lines = self.Drone2Scn(drone_id, start_time, lats, lons, turnbool, alts, edge_ids, airspace)
                 f.write(''.join(lines))
-                
+
     def Graph2Traf(self, G, concurrent_ac, aircraft_vel, max_time, dt, min_dist, 
                    orig_nodes = None, dest_nodes = None):
         """Creates random traffic using the nodes of graph G as origins and

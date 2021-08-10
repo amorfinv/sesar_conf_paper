@@ -115,8 +115,8 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
                     [16.32320989, 48.21011708],
                     [16.35545007, 48.22481353],
                     [16.35305335, 48.21827425]])
-    generated_traffic, routes, turnslist = bst.Fast2Scn(G, concurrent_ac, aircraft_vel, max_time, 
-                                        dt, min_dist, turn_factor, path_planner, orig_coords)
+    generated_traffic, routes, turnslist, edge_ids = bst.Fast2Scn(G, concurrent_ac, aircraft_vel, max_time, 
+                                       dt, min_dist, turn_factor, path_planner, orig_coords)
     print('Traffic generated!')
 
     # Step 3.1: Loop through traffic, find path, add to dictionary
@@ -140,7 +140,9 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
         scenario_dict[flight[0]]['turnbool'] = turns
         #Add alts
         scenario_dict[flight[0]]['alts'] = None
-        
+        # Add edge_ids
+        scenario_dict[flight[0]]['edge_ids'] = edge_ids[i]
+
     print('All paths created!')
     
     # Step 3.2: Pickle the traffic dictionary and save it in case we need it
@@ -157,9 +159,13 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     #     scenario_dict = pickle.load(f)
     
     for resometh in ['NONE', 'MVP', 'ORCA']:
-        # Step 4: Create scenario file from dictionary
-        bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}.scn', 
-                     scenario_dict, resometh)
+        # Step 4a: Create scenario file from dictionary
+        bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx}_{resometh}.scn', 
+                     scenario_dict, resometh=resometh)
+    
+    # airspace structure scenarios
+    # Step 4b: Create scenario file from dictionary for airspace experiment
+    bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx}_NONE_air.scn', 
+                    scenario_dict, resometh='NONE', airspace=True)
     
     print('Scenario file created!')
-    
