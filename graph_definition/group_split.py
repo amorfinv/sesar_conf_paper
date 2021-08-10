@@ -60,8 +60,12 @@ new_edges = graph_funcs.add_edge_interior_angles(new_edges)
 ### final edits missed on past edits
 nodes, new_edges = graph_funcs.manual_edits_after_genetic(nodes, new_edges)
 
+### allocate group heights
+new_edges = graph_funcs.allocate_group_height(nodes, new_edges, rotation_val=0)
+
 G_final = ox.graph_from_gdfs(nodes, new_edges)
 ox.distance.add_edge_lengths(G_final)
+ox.add_edge_bearings(G_final)
 
 ox.save_graphml(G_final, filepath=path.join(gis_data_path, 'streets', 'directed_groups.graphml'))
 

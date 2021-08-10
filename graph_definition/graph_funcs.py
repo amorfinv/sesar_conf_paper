@@ -1,3 +1,6 @@
+from networkx.algorithms.centrality import group
+from networkx.classes.function import edges
+from networkx.generators.random_graphs import random_powerlaw_tree_sequence
 import osmnx as ox
 import numpy as np
 from shapely.geometry import LineString, MultiLineString, Point
@@ -167,6 +170,140 @@ def allocate_edge_height(edges_gdf, rotation_val=0):
     bearing_indices = calculate_bearing_diff_indices(bearings, low_bound_1, high_bound_1, low_bound_2, high_bound_2)
     
     return layer_allocation, bearing_indices
+
+def allocate_group_height(nodes_gdf, edges_gdf, rotation_val=0):
+    '''
+    Arguments:
+        -edges_gdf: edge geodataframe with group numbers.
+        -rotation_val: rotation of bounds (uniform). Must be between -45° and 45°.
+
+    Add layer height allocation attribute to graph based on street bearing.
+
+          high_bound_1    N    low_bound_1
+            ░░░░░\░░░░░░░░│░░░░░░░░/░░░░░
+            ░░░░░░\░░░░░░░│░░░░░░░/░░░░░░
+            ░░░░░░░\░░░░░░│░░░░░░/░░░░░░░
+            ░░░░░░░░\░░░░░│░░░░░/░░░░░░░░
+            ░░░░░░░░░\░░░░│░░░░/░░░░░░░░░
+            ░░░░░░░░░░\░░░│░░░/░░░░░░░░░░
+            ░░░░░░░░░░░\░░│░░/░╬░░░░░░░░░
+            ░░░░░░░░░░░░\░│░/░░░╬----------rotation angle (min: -45° and max:45°)
+            ░░░░░░░░░░░░░\│/░░░░░╬░░░░░░░
+           W──────────────┼──────────────E
+            ░░░░░░░░░░░░░/│\░░░░░░░░░░░░░
+            ░░░░░░░░░░░░/░│░\░░░░░░░░░░░░
+            ░░░░░░░░░░░/░░│░░\░░░░░░░░░░░
+            ░░░░░░░░░░/░░░│░░░\░░░░░░░░░░
+            ░░░░░░░░░/░░░░│░░░░\░░░░░░░░░
+            ░░░░░░░░/░░░░░│░░░░░\░░░░░░░░
+            ░░░░░░░/░░░░░░│░░░░░░\░░░░░░░
+            ░░░░░░/░░░░░░░│░░░░░░░\░░░░░░
+            ░░░░░/░░░░░░░░│░░░░░░░░\░░░░░
+          low_bound_2     S    high_bound_1
+
+    Shows border between height 1 and height 2 layers. For example if rotation angle is zero:
+        -low_bound_1 = 45°
+        -high_bound_1 = 135°
+        -low_bound_2 = 225°
+        -high_bound_2 = 315°
+    This means that any street with bearing angle between 45° and 135° or 225° and 315° will be at height 1. All others will be at height 2.
+    In this function the rotation is uniform, meaning that rotation angle is added to all bounds. Usually, you want to remove edges that
+    are not very straight before passing it onto this method. This is because osmnx only gives bearings from node to node.
+
+    It is not recommended to use this method for a large city-wide graph. However, it will be useful to optimize sub graphs.
+    
+    Returns geodataframes of edges. These can be used to create a new graph outisde function.
+
+    TODO: Make it so that arbitrary rotation angles can be applied. 
+    At the moment a uniform rotation to an orhtogonal axis is used for cutoff. However, there is no reason why this needs to be orthogonal.
+    This new addition will make optimization more difficult and perhaps not very necessary. This method is meant to be an initial
+    optimization. After this optimization, some refinement is needed to fix some edges.
+    Exception handling. So if rotation angle is too small/large then choose a correct value.
+    '''
+
+    # get borders to divide layer allocation (see image in comments)
+    low_bound_1 = 45 + rotation_val
+    high_bound_1 = 135 + rotation_val
+    low_bound_2 = 225 + rotation_val
+    high_bound_2 = 315 + rotation_val
+
+    # get numpy array of group numbers
+    group_numbers = np.unique(edges_gdf['stroke_group'])
+
+    # build sub gdf of only group numbers
+    group_num = group_numbers[0]
+
+    start_node, end_node = get_group_border_nodes(group_num, edges_gdf)
+
+    orig = (nodes_gdf.loc[start_node].y, nodes_gdf.loc[start_node].x)
+    dest = (nodes_gdf.loc[end_node].y, nodes_gdf.loc[end_node].x)
+
+    group_bearing = get_bearing(orig, dest)
+    if 0 <= group_bearing <= 90:
+        group_bearing = 90 - group_bearing
+    elif 90 < group_bearing <= 360:
+        group_bearing = 360 - (group_bearing - 90)
+    
+    group_bearing = 90 - group_bearing if 0 <= group_bearing <= 90 else 0
+    print(group_bearing)
+
+    # find first node of group and last node
+    if low_bound_1 < group_bearing < high_bound_1 or low_bound_2 < group_bearing < high_bound_2:
+        layer_loc = 'height 1'
+    else:
+        layer_loc = 'height 2'
+
+    print(layer_loc)
+    # allocate layers
+    layer_allocation.append(layer_loc)
+    print(ccccc)
+
+    # get bearing difference index
+    
+    return layer_allocation, 
+
+def get_group_border_nodes(group_num, edges_gdf):
+    
+    # get a gdf of just the stroke group and just it's values
+    group_gdf = edges_gdf[edges_gdf['stroke_group']==group_num]
+    group_uv = list(group_gdf.index.values)
+
+    # get initial start and end node from first edge
+    idx = 0
+    start_node = group_uv[0][0]
+    group_uv_start = group_uv[:idx] + group_uv[idx + 1:]
+    start_flag =  True
+    while start_flag:
+        
+        try:
+            edges_with_start_node = [item for item in group_uv_start if start_node in item][0]
+
+            start_node = edges_with_start_node[0]
+        
+            idx = group_uv_start.index(edges_with_start_node)
+            group_uv_start = group_uv_start[:idx] + group_uv_start[idx + 1:]
+        
+        except IndexError:
+            start_flag = False
+
+    idx = 0
+    end_node = group_uv[idx][1]
+    group_uv_end = group_uv[:idx] + group_uv[idx + 1:]
+    end_flag = True
+    while end_flag:
+        
+        try:
+            edges_with_end_node = [item for item in group_uv_end if end_node in item][0]
+            end_node = edges_with_end_node[1]
+    
+            idx = group_uv_end.index(edges_with_end_node)
+            group_uv_end = group_uv_end[:idx] + group_uv_end[idx + 1:]
+
+            xx = False
+        except IndexError:
+            end_flag = False
+
+    return start_node, end_node
 
 def calculate_integral_bearing_difference(edges_geometry):
     '''
