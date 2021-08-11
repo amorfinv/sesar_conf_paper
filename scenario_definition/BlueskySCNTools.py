@@ -382,13 +382,20 @@ class BlueskySCNTools():
             filepath = filepath + '.scn'
         
         with open(filepath, 'w+') as f:
-            f.write('00:00:00>HOLD\n00:00:00>PAN 48.223775 16.337976\n00:00:00>ZOOM 50\n')
+            # Start with a hold so all the commands are added to the stack.
+            #f.write('00:00:00>HOLD\n00:00:00>PAN 48.223775 16.337976\n00:00:00>ZOOM 50\n')
+            # Add CR stuff
             if resometh == 'MVP':
                 f.write('00:00:00>ASAS ON\n00:00:00>RESO MVP\n00:00:00>RMETHH SPD\n')
             elif resometh == 'ORCA':
                 f.write('00:00:00>ASAS ON\n00:00:00>RESO ORCASPEEDBASED\n')
+            elif resometh == 'VO':
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO VOSPEEDBASED\n')
             else:
                 f.write('00:00:00>ASAS ON\n')
+            # Enable logger
+            f.write('00:00:00>SESARLOG\n')
+            # Add flights
             for drone_id in dictionary:
                 try:
                     start_time = dictionary[drone_id]['start_time']
@@ -402,6 +409,8 @@ class BlueskySCNTools():
                     return
                 lines = self.Drone2Scn(drone_id, start_time, lats, lons, turnbool, alts, edge_ids, airspace)
                 f.write(''.join(lines))
+            # Add the final hold command
+            f.write('01:05:00>HOLD\n')
 
     def Graph2Traf(self, G, concurrent_ac, aircraft_vel, max_time, dt, min_dist, 
                    orig_nodes = None, dest_nodes = None):
