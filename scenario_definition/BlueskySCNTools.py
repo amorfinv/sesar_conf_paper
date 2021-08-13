@@ -323,17 +323,17 @@ class BlueskySCNTools():
                 # add edge ids to the waypoint
                 stroke_group = self.edge_dict[f'{edge_ids[i]}']['stroke_group']
                 if alts is not None:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {edge_ids[i]} {stroke_group}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {cruise_speed} {stroke_group}\n'
                 else:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {edge_ids[i]} {stroke_group}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {cruise_speed} {stroke_group}\n'
                 
             else:
                 # Airspace is off
                 # Add the waypoint normally
                 if alts is not None:
-                    wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]}\n'
+                    wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} {alts[i]} {cruise_speed}\n'
                 else:
-                    wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]}\n'
+                    wpt_txt = f'ADDWPT {drone_id} {lats[i]} {lons[i]} ,, {cruise_speed}\n'
             
             lines.append(start_time_txt + wpt_txt)
             
