@@ -393,8 +393,16 @@ class BlueskySCNTools():
                 f.write('00:00:00>ASAS ON\n00:00:00>RESO VOSPEEDBASED\n')
             else:
                 f.write('00:00:00>ASAS ON\n')
+            if airspace == True:
+                f.write('00:00:00>STREETSENABLE\n')
             # Enable logger
             f.write('00:00:00>SESARLOG\n')
+            # Load geofences
+            f.write('00:00:00>LOADGEOFENCES SESARVIENNA N\n')
+            # Fastforward
+            f.write('00:00:10>FF\n')
+            f.write('00:00:20>FF\n')
+            f.write('00:00:30>FF\n')
             # Add flights
             for drone_id in dictionary:
                 try:
@@ -410,6 +418,9 @@ class BlueskySCNTools():
                 lines = self.Drone2Scn(drone_id, start_time, lats, lons, turnbool, alts, edge_ids, airspace)
                 f.write(''.join(lines))
             # Add the final hold command
+            f.write('00:00:10>FF\n')
+            f.write('00:00:20>FF\n')
+            f.write('00:00:30>FF\n')
             f.write('01:05:00>HOLD\n')
 
     def Graph2Traf(self, G, concurrent_ac, aircraft_vel, max_time, dt, min_dist, 
