@@ -48,6 +48,7 @@ class BlueskySCNTools():
         trafdist = np.empty((0,2))
 
         edge_ids_list = []
+        turn_loc_list = []
 
         # Create orig_nodes and dest_nodes by using osmnx closest node
         # These two should be np arrays with each row being one point lon lat
@@ -101,7 +102,7 @@ class BlueskySCNTools():
                 destination_node = destination[2]
 
                 length = 0
-                route, turns, edge_ids = path_planner.route(origin_node, destination_node)
+                route, turns, edge_ids, turn_loc = path_planner.route(origin_node, destination_node)
                 for i in range(len(route)):
                     if i == 1:
                         continue
@@ -119,13 +120,14 @@ class BlueskySCNTools():
                 turnslist.append(turns)
                 trafdist = np.vstack([trafdist, ['D'+str(ac_no),  length]])
                 edge_ids_list.append(edge_ids)
+                turn_loc_list.append(turn_loc)
                 ac_no += 1
                 decrement_me -= 1  
             # Go to the next time step
             timestep += 1
             start_time += dt
             
-        return trafgen, routes, turnslist, edge_ids_list
+        return trafgen, routes, turnslist, edge_ids_list, turn_loc_list
 
     def Slow2Scn(self, G, edges, concurrent_ac, aircraft_vel, max_time, dt, 
                  min_dist, turn_factor, orig_points = None, dest_points = None):
@@ -223,7 +225,7 @@ class BlueskySCNTools():
             
         return trafgen, routes, turnslist
 
-    def Drone2Scn(self, drone_id, start_time, lats, lons, turnbool, alts = None, edge_ids=None, airspace=False):
+    def Drone2Scn(self, drone_id, start_time, lats, lons, turnbool, alts = None, edge_ids=None, turn_loc=None, airspace=False):
         """Converts arrays to Bluesky scenario files. The first
         and last waypoints will be taken as the origin and 
         destination of the drone.
@@ -301,7 +303,7 @@ class BlueskySCNTools():
             cre_text = f'CRE {drone_id} M600 {lats[0]} {lons[0]} {qdr} 25 {turn_speed}\n'
         
         lines.append(start_time_txt + cre_text)
-        
+
         # Then we need to for loop through all the lats
         prev_wpt_turn = False
         for i in range(1, len(lats)):
@@ -322,10 +324,12 @@ class BlueskySCNTools():
                 # Airspace is on
                 # add edge ids to the waypoint
                 stroke_group = self.edge_dict[f'{edge_ids[i]}']['stroke_group']
+                turn_point = f'{turn_loc[i][1]} {turn_loc[i][0]}'
+
                 if alts is not None:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {cruise_speed} {stroke_group}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {edge_ids[i]} {stroke_group} {turn_point}\n'
                 else:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {cruise_speed} {stroke_group}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {edge_ids[i]} {stroke_group} {turn_point}\n'
                 
             else:
                 # Airspace is off
@@ -412,10 +416,11 @@ class BlueskySCNTools():
                     turnbool = dictionary[drone_id]['turnbool']
                     alts = dictionary[drone_id]['alts']
                     edge_ids = dictionary[drone_id]['edge_ids']
+                    turn_loc = dictionary[drone_id]['turn_loc']
                 except:
                     print('Key error. Make sure the dictionary is formatted correctly.')
                     return
-                lines = self.Drone2Scn(drone_id, start_time, lats, lons, turnbool, alts, edge_ids, airspace)
+                lines = self.Drone2Scn(drone_id, start_time, lats, lons, turnbool, alts, edge_ids, turn_loc, airspace)
                 f.write(''.join(lines))
             # Add the final hold command
             f.write('00:00:10>FF\n')

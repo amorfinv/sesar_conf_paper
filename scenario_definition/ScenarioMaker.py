@@ -32,7 +32,7 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
 # ----------------------------------------------------------------------------
 # If using existing pickles, comment out everything between the long lines (below)
 
-    #Step 2: Generate traffic from it
+    # #Step 2: Generate traffic from it
     # aircraft_vel = 15 # [m/s]
     # max_time = 3600 # [s]
     # dt = 5
@@ -115,7 +115,7 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     #                 [16.32320989, 48.21011708],
     #                 [16.35545007, 48.22481353],
     #                 [16.35305335, 48.21827425]])
-    # generated_traffic, routes, turnslist, edge_ids = bst.Fast2Scn(G, concurrent_ac, aircraft_vel, max_time, 
+    # generated_traffic, routes, turnslist, edge_ids, turn_loc = bst.Fast2Scn(G, concurrent_ac, aircraft_vel, max_time, 
     #                                    dt, min_dist, turn_factor, path_planner, orig_coords)
     # print('Traffic generated!')
 
@@ -142,7 +142,8 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     #     scenario_dict[flight[0]]['alts'] = None
     #     # Add edge_ids
     #     scenario_dict[flight[0]]['edge_ids'] = edge_ids[i]
-
+    #     # Add turn locations
+    #     scenario_dict[flight[0]]['turn_loc'] = turn_loc[i]
     # print('All paths created!')
     
     # # Step 3.2: Pickle the traffic dictionary and save it in case we need it

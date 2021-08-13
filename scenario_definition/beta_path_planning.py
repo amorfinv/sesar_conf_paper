@@ -6,6 +6,7 @@ import osmnx as ox
 import math
 from shapely.geometry import MultiLineString
 from shapely import ops
+import numpy as np
 class PathPlanner():
     def __init__(self, G, nodes, edges, angle_cutoff=20):
         self.G = G
@@ -83,13 +84,50 @@ class PathPlanner():
             # add a zero for turnbool of destination
             turnbool.append(0)
 
+            # make turn_loc list
+            turn_bool_array = np.array(turnbool)
+
+            turn_indices = np.argwhere(turn_bool_array == 1)
+            turn_indices = np.asarray(turn_indices).flatten()
+
+            # only go into loop if turn indices exist
+            if len(turn_indices) > 0:
+
+                # get lat,lon of these indices
+                lat_lon_np = np.array(route)
+                turn_locs = []
+                cnt = 0
+                turn_index = turn_indices[cnt]
+
+                for idx, _ in np.ndenumerate(turn_bool_array):
+                    idx = idx[0]
+
+                    # only go into loop if not the last indices
+                    if idx <= turn_indices[-1]:
+
+                        lat_lon = (lat_lon_np[turn_index][0], lat_lon_np[turn_index][1])
+                        turn_locs.append(lat_lon)
+
+                        if idx in turn_indices:
+                            cnt += 1
+
+                            try:
+                                turn_index = turn_indices[cnt]
+                            except IndexError:
+                                turn_index = turn_indices[-1]
+
+                    else:
+                        turn_locs.append((48.1351,11.5820)) # set to Munich if no more turns
+            else:
+                turn_locs = [(48.1351,11.5820) for idx in range(len(merged_line_list))] # set to Munich if no more turns
         else:
             route = []
             turnbool = []
             edge_ids = []
+            turn_locs = []
             print('No path Found!')
 
-        return route, turnbool, edge_ids
+        return route, turnbool, edge_ids, turn_locs
 
 """
 The below function calculates the joining angle between
