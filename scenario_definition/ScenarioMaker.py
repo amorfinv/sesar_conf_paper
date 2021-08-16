@@ -5,7 +5,6 @@ Created on Thu Jun  3 11:47:30 2021
 @author: andub
 """
 import osmnx as ox
-import numpy as np
 import BlueskySCNTools
 from beta_path_planning import PathPlanner
 import os

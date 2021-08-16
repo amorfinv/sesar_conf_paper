@@ -327,9 +327,9 @@ class BlueskySCNTools():
                 turn_point = f'{turn_loc[i][1]} {turn_loc[i][0]}'
 
                 if alts is not None:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {speeds[i]} {edge_ids[i]} {stroke_group} {turn_point}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} {alts[i]} {cruise_speed} {edge_ids[i]} {stroke_group} {turn_point}\n'
                 else:
-                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {speeds[i]} {edge_ids[i]} {stroke_group} {turn_point}\n'
+                    wpt_txt = f'ADDWPT2 {drone_id} {lats[i]} {lons[i]} ,, {cruise_speed} {edge_ids[i]} {stroke_group} {turn_point}\n'
                 
             else:
                 # Airspace is off
