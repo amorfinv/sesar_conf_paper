@@ -1,4 +1,4 @@
-#%% Processes CONFLOG
+# %% Processes CONFLOG
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ results_folder = 'Attempt_7'
 files = os.listdir(results_folder)
 filtered_files = []
 
-#Get needed files
+# %%% Get needed files
 for i, file in enumerate(files):
     if file[0:4] == 'CONF':
         filtered_files.append(file)
@@ -57,7 +57,7 @@ VO_conf_data = np.array(VO_conf_data)
 NONE_conf_data = np.array(NONE_conf_data)
 AIR_conf_data = np.array(AIR_conf_data)
 
-# Divide the data by density
+# %%% Divide the data by density
 # Low
 MVP_conf_data_l = MVP_conf_data[np.where(MVP_conf_data[:,0] == 5)]
 ORCA_conf_data_l = ORCA_conf_data[np.where(ORCA_conf_data[:,0] == 5)]
@@ -79,113 +79,131 @@ VO_conf_data_h = VO_conf_data[np.where(VO_conf_data[:,0] == 11)]
 NONE_conf_data_h = NONE_conf_data[np.where(NONE_conf_data[:,0] == 11)]
 AIR_conf_data_h = AIR_conf_data[np.where(AIR_conf_data[:,0] == 11)]
 
+# %%% Graphs
 '''
-# We have data, now let's plot some stuff
+# %%%% Number of conflicts
 plt.figure('conf_num')
-plt.subplot(131)
-plt.title('Low density')
-plt.scatter([2]*len(MVP_conf_data_l), MVP_conf_data_l[:,2])
-plt.scatter([4]*len(ORCA_conf_data_l), ORCA_conf_data_l[:,2])
-plt.scatter([3]*len(VO_conf_data_l), VO_conf_data_l[:,2])
-plt.scatter([0]*len(NONE_conf_data_l), NONE_conf_data_l[:,2])
-plt.scatter([1]*len(AIR_conf_data_l), AIR_conf_data_l[:,2])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Number of conflicts [-]')
+ax1 = plt.subplot(131)
+ax1.set_title('Low density')
+ax1.scatter([2]*len(MVP_conf_data_l), MVP_conf_data_l[:,2])
+ax1.scatter([4]*len(ORCA_conf_data_l), ORCA_conf_data_l[:,2])
+ax1.scatter([3]*len(VO_conf_data_l), VO_conf_data_l[:,2])
+ax1.scatter([0]*len(NONE_conf_data_l), NONE_conf_data_l[:,2])
+ax1.scatter([1]*len(AIR_conf_data_l), AIR_conf_data_l[:,2])
+ax1.set_xticks([0,1,2,3,4])
+ax1.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax1.set_ylabel('Number of conflicts [-]')
+
+ax2 = plt.subplot(132)
+ax2.set_title('Medium density')
+ax2.scatter([2]*len(MVP_conf_data_m), MVP_conf_data_m[:,2])
+ax2.scatter([4]*len(ORCA_conf_data_m), ORCA_conf_data_m[:,2])
+ax2.scatter([3]*len(VO_conf_data_m), VO_conf_data_m[:,2])
+ax2.scatter([0]*len(NONE_conf_data_m), NONE_conf_data_m[:,2])
+ax2.scatter([1]*len(AIR_conf_data_m), AIR_conf_data_m[:,2])
+ax2.set_xticks([0,1,2,3,4])
+ax2.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax2.set_ylabel('Number of conflicts [-]')
+
+ax3 = plt.subplot(133)
+ax3.set_title('High density')
+ax3.scatter([2]*len(MVP_conf_data_h), MVP_conf_data_h[:,2])
+ax3.scatter([4]*len(ORCA_conf_data_h), ORCA_conf_data_h[:,2])
+ax3.scatter([3]*len(VO_conf_data_h), VO_conf_data_h[:,2])
+ax3.scatter([0]*len(NONE_conf_data_h), NONE_conf_data_h[:,2])
+ax3.scatter([1]*len(AIR_conf_data_h), AIR_conf_data_h[:,2])
+ax3.set_xticks([0,1,2,3,4])
+ax3.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax3.set_ylabel('Number of conflicts [-]')
+
+ax1.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax2.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax3.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
 plt.show()
 
-plt.subplot(132)
-plt.title('Medium density')
-plt.scatter([2]*len(MVP_conf_data_m), MVP_conf_data_m[:,2])
-plt.scatter([4]*len(ORCA_conf_data_m), ORCA_conf_data_m[:,2])
-plt.scatter([3]*len(VO_conf_data_m), VO_conf_data_m[:,2])
-plt.scatter([0]*len(NONE_conf_data_m), NONE_conf_data_m[:,2])
-plt.scatter([1]*len(AIR_conf_data_m), AIR_conf_data_m[:,2])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Number of conflicts [-]')
-plt.show()
-
-plt.subplot(133)
-plt.title('High density')
-plt.scatter([2]*len(MVP_conf_data_h), MVP_conf_data_h[:,2])
-plt.scatter([4]*len(ORCA_conf_data_h), ORCA_conf_data_h[:,2])
-plt.scatter([3]*len(VO_conf_data_h), VO_conf_data_h[:,2])
-plt.scatter([0]*len(NONE_conf_data_h), NONE_conf_data_h[:,2])
-plt.scatter([1]*len(AIR_conf_data_h), AIR_conf_data_h[:,2])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Number of conflicts [-]')
-plt.show()
-
+# %%%% Number of LOS
 plt.figure('los_num')
-plt.subplot(131)
-plt.title('Low density')
-plt.scatter([2]*len(MVP_conf_data_l), MVP_conf_data_l[:,3])
-plt.scatter([4]*len(ORCA_conf_data_l), ORCA_conf_data_l[:,3])
-plt.scatter([3]*len(VO_conf_data_l), VO_conf_data_l[:,3])
-plt.scatter([0]*len(NONE_conf_data_l), NONE_conf_data_l[:,3])
-plt.scatter([1]*len(AIR_conf_data_l), AIR_conf_data_l[:,3])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Losses of separation [-]')
+ax1 = plt.subplot(131)
+ax1.set_title('Low density')
+ax1.scatter([2]*len(MVP_conf_data_l), MVP_conf_data_l[:,3])
+ax1.scatter([4]*len(ORCA_conf_data_l), ORCA_conf_data_l[:,3])
+ax1.scatter([3]*len(VO_conf_data_l), VO_conf_data_l[:,3])
+ax1.scatter([0]*len(NONE_conf_data_l), NONE_conf_data_l[:,3])
+ax1.scatter([1]*len(AIR_conf_data_l), AIR_conf_data_l[:,3])
+ax1.set_xticks([0,1,2,3,4])
+ax1.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax1.set_ylabel('Number of conflicts [-]')
+
+ax2 = plt.subplot(132)
+ax2.set_title('Medium density')
+ax2.scatter([2]*len(MVP_conf_data_m), MVP_conf_data_m[:,3])
+ax2.scatter([4]*len(ORCA_conf_data_m), ORCA_conf_data_m[:,3])
+ax2.scatter([3]*len(VO_conf_data_m), VO_conf_data_m[:,3])
+ax2.scatter([0]*len(NONE_conf_data_m), NONE_conf_data_m[:,3])
+ax2.scatter([1]*len(AIR_conf_data_m), AIR_conf_data_m[:,3])
+ax2.set_xticks([0,1,2,3,4])
+ax2.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax2.set_ylabel('Number of conflicts [-]')
+
+ax3 = plt.subplot(133)
+ax3.set_title('High density')
+ax3.scatter([2]*len(MVP_conf_data_h), MVP_conf_data_h[:,3])
+ax3.scatter([4]*len(ORCA_conf_data_h), ORCA_conf_data_h[:,3])
+ax3.scatter([3]*len(VO_conf_data_h), VO_conf_data_h[:,3])
+ax3.scatter([0]*len(NONE_conf_data_h), NONE_conf_data_h[:,3])
+ax3.scatter([1]*len(AIR_conf_data_h), AIR_conf_data_h[:,3])
+ax3.set_xticks([0,1,2,3,4])
+ax3.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax3.set_ylabel('Number of conflicts [-]')
+
+ax1.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax2.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax3.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
 plt.show()
 
-plt.subplot(132)
-plt.title('Medium density')
-plt.scatter([2]*len(MVP_conf_data_m), MVP_conf_data_m[:,3])
-plt.scatter([4]*len(ORCA_conf_data_m), ORCA_conf_data_m[:,3])
-plt.scatter([3]*len(VO_conf_data_m), VO_conf_data_m[:,3])
-plt.scatter([0]*len(NONE_conf_data_m), NONE_conf_data_m[:,3])
-plt.scatter([1]*len(AIR_conf_data_m), AIR_conf_data_m[:,3])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Losses of separation [-]')
-plt.show()
-
-plt.subplot(133)
-plt.title('High density')
-plt.scatter([2]*len(MVP_conf_data_h), MVP_conf_data_h[:,3])
-plt.scatter([4]*len(ORCA_conf_data_h), ORCA_conf_data_h[:,3])
-plt.scatter([3]*len(VO_conf_data_h), VO_conf_data_h[:,3])
-plt.scatter([0]*len(NONE_conf_data_h), NONE_conf_data_h[:,3])
-plt.scatter([1]*len(AIR_conf_data_h), AIR_conf_data_h[:,3])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Losses of separation [-]')
-plt.show()
-
+# %%%% Number of geobreaches
 plt.figure('geobreach_num')
-plt.subplot(131)
-plt.title('Low density')
-plt.scatter([2]*len(MVP_conf_data_l), MVP_conf_data_l[:,4])
-plt.scatter([4]*len(ORCA_conf_data_l), ORCA_conf_data_l[:,4])
-plt.scatter([3]*len(VO_conf_data_l), VO_conf_data_l[:,4])
-plt.scatter([0]*len(NONE_conf_data_l), NONE_conf_data_l[:,4])
-plt.scatter([1]*len(AIR_conf_data_l), AIR_conf_data_l[:,4])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Number of geofence breaches [-]')
-plt.show()
+ax1 = plt.subplot(131)
+ax1.set_title('Low density')
+ax1.scatter([2]*len(MVP_conf_data_l), MVP_conf_data_l[:,4])
+ax1.scatter([4]*len(ORCA_conf_data_l), ORCA_conf_data_l[:,4])
+ax1.scatter([3]*len(VO_conf_data_l), VO_conf_data_l[:,4])
+ax1.scatter([0]*len(NONE_conf_data_l), NONE_conf_data_l[:,4])
+ax1.scatter([1]*len(AIR_conf_data_l), AIR_conf_data_l[:,4])
+ax1.set_xticks([0,1,2,3,4])
+ax1.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax1.set_ylabel('Number of conflicts [-]')
 
-plt.subplot(132)
-plt.title('Medium density')
-plt.scatter([2]*len(MVP_conf_data_m), MVP_conf_data_m[:,4])
-plt.scatter([4]*len(ORCA_conf_data_m), ORCA_conf_data_m[:,4])
-plt.scatter([3]*len(VO_conf_data_m), VO_conf_data_m[:,4])
-plt.scatter([0]*len(NONE_conf_data_m), NONE_conf_data_m[:,4])
-plt.scatter([1]*len(AIR_conf_data_m), AIR_conf_data_m[:,4])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Number of geofence breaches [-]')
-plt.show()
+ax2 = plt.subplot(132)
+ax2.set_title('Medium density')
+ax2.scatter([2]*len(MVP_conf_data_m), MVP_conf_data_m[:,4])
+ax2.scatter([4]*len(ORCA_conf_data_m), ORCA_conf_data_m[:,4])
+ax2.scatter([3]*len(VO_conf_data_m), VO_conf_data_m[:,4])
+ax2.scatter([0]*len(NONE_conf_data_m), NONE_conf_data_m[:,4])
+ax2.scatter([1]*len(AIR_conf_data_m), AIR_conf_data_m[:,4])
+ax2.set_xticks([0,1,2,3,4])
+ax2.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax2.set_ylabel('Number of conflicts [-]')
 
-plt.subplot(133)
-plt.title('High density')
-plt.scatter([2]*len(MVP_conf_data_h), MVP_conf_data_h[:,4])
-plt.scatter([4]*len(ORCA_conf_data_h), ORCA_conf_data_h[:,4])
-plt.scatter([3]*len(VO_conf_data_h), VO_conf_data_h[:,4])
-plt.scatter([0]*len(NONE_conf_data_h), NONE_conf_data_h[:,4])
-plt.scatter([1]*len(AIR_conf_data_h), AIR_conf_data_h[:,4])
-plt.xticks([0,1,2,3,4], ['None', 'Air', 'MVP', 'VO', 'ORCA'])
-plt.ylabel('Number of geofence breaches [-]')
+ax3 = plt.subplot(133)
+ax3.set_title('High density')
+ax3.scatter([2]*len(MVP_conf_data_h), MVP_conf_data_h[:,4])
+ax3.scatter([4]*len(ORCA_conf_data_h), ORCA_conf_data_h[:,4])
+ax3.scatter([3]*len(VO_conf_data_h), VO_conf_data_h[:,4])
+ax3.scatter([0]*len(NONE_conf_data_h), NONE_conf_data_h[:,4])
+ax3.scatter([1]*len(AIR_conf_data_h), AIR_conf_data_h[:,4])
+ax3.set_xticks([0,1,2,3,4])
+ax3.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax3.set_ylabel('Number of conflicts [-]')
+
+ax1.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax2.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax3.set_ylim([-2, max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
 plt.show()
 '''
 
-#%% Process FLSTLOG
-#Get needed files
+# %% Process FLSTLOG
+# %%% Get needed files
 filtered_files = []
 for i, file in enumerate(files):
     if file[0:4] == 'FLST':
@@ -231,13 +249,13 @@ for file in filtered_files:
         print('Something is wrong.')
         
 # Convert to numpy arrays
-MVP_flst_data = np.array(MVP_flst_data)
-ORCA_flst_data = np.array(ORCA_flst_data)
-VO_flst_data = np.array(VO_flst_data)
-NONE_flst_data = np.array(NONE_flst_data)
-AIR_flst_data = np.array(AIR_flst_data)
+MVP_flst_data = np.array(MVP_flst_data, dtype = object)
+ORCA_flst_data = np.array(ORCA_flst_data, dtype = object)
+VO_flst_data = np.array(VO_flst_data, dtype = object)
+NONE_flst_data = np.array(NONE_flst_data, dtype = object)
+AIR_flst_data = np.array(AIR_flst_data, dtype = object)
 
-# Divide the data by density
+# %%% Divide the data by density
 # Low
 MVP_flst_data_l = MVP_flst_data[np.where(MVP_flst_data[:,0] == 5)]
 ORCA_flst_data_l = ORCA_flst_data[np.where(ORCA_flst_data[:,0] == 5)]
@@ -260,12 +278,157 @@ NONE_flst_data_h = NONE_flst_data[np.where(NONE_flst_data[:,0] == 11)]
 AIR_flst_data_h = AIR_flst_data[np.where(AIR_flst_data[:,0] == 11)]
 
 # In this one we need more data processing
-# First, compute the flight time for each
-MVP_flst_flighttime_l = np.array([])
+# %%% Flight time
+# %%%% Data gathering
+MVP_flst_flighttime_l = []
+MVP_flst_avgflighttime_l = []
 for scenario_data in MVP_flst_data_l:
-    scenario_data = np.array([np.array(x) for x in scenario_data[1]])
-    MVP_flst_flighttime_l = np.append(MVP_flst_flighttime_l, 
-                            scenario_data[:,0] - scenario_data[:,2])
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    MVP_flst_flighttime_l.append(flight_times)
+    MVP_flst_avgflighttime_l.append(np.average(flight_times))
+
+ORCA_flst_flighttime_l = []
+ORCA_flst_avgflighttime_l = []
+for scenario_data in ORCA_flst_data_l:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    ORCA_flst_flighttime_l.append(flight_times)
+    ORCA_flst_avgflighttime_l.append(np.average(flight_times))
+
+VO_flst_flighttime_l = []
+VO_flst_avgflighttime_l = []
+for scenario_data in VO_flst_data_l:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    VO_flst_flighttime_l.append(flight_times)
+    VO_flst_avgflighttime_l.append(np.average(flight_times))
+
+NONE_flst_flighttime_l = []
+NONE_flst_avgflighttime_l = []
+for scenario_data in NONE_flst_data_l:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    NONE_flst_flighttime_l.append(flight_times)
+    NONE_flst_avgflighttime_l.append(np.average(flight_times))
+
+AIR_flst_flighttime_l = []
+AIR_flst_avgflighttime_l = []
+for scenario_data in AIR_flst_data_l:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    AIR_flst_flighttime_l.append(flight_times)
+    AIR_flst_avgflighttime_l.append(np.average(flight_times))
+    
+MVP_flst_flighttime_m = []
+MVP_flst_avgflighttime_m = []
+for scenario_data in MVP_flst_data_m:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    MVP_flst_flighttime_m.append(flight_times)
+    MVP_flst_avgflighttime_m.append(np.average(flight_times))
+
+ORCA_flst_flighttime_m = []
+ORCA_flst_avgflighttime_m = []
+for scenario_data in ORCA_flst_data_m:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    ORCA_flst_flighttime_m.append(flight_times)
+    ORCA_flst_avgflighttime_m.append(np.average(flight_times))
+
+VO_flst_flighttime_m = []
+VO_flst_avgflighttime_m = []
+for scenario_data in VO_flst_data_m:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    VO_flst_flighttime_m.append(flight_times)
+    VO_flst_avgflighttime_m.append(np.average(flight_times))
+
+NONE_flst_flighttime_m = []
+NONE_flst_avgflighttime_m = []
+for scenario_data in NONE_flst_data_m:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    NONE_flst_flighttime_m.append(flight_times)
+    NONE_flst_avgflighttime_m.append(np.average(flight_times))
+
+AIR_flst_flighttime_m = []
+AIR_flst_avgflighttime_m = []
+for scenario_data in AIR_flst_data_m:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    AIR_flst_flighttime_m.append(flight_times)
+    AIR_flst_avgflighttime_m.append(np.average(flight_times))
+    
+MVP_flst_flighttime_h = []
+MVP_flst_avgflighttime_h = []
+for scenario_data in MVP_flst_data_h:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    MVP_flst_flighttime_h.append(flight_times)
+    MVP_flst_avgflighttime_h.append(np.average(flight_times))
+
+ORCA_flst_flighttime_h = []
+ORCA_flst_avgflighttime_h = []
+for scenario_data in ORCA_flst_data_h:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    ORCA_flst_flighttime_h.append(flight_times)
+    ORCA_flst_avgflighttime_h.append(np.average(flight_times))
+
+VO_flst_flighttime_h = []
+VO_flst_avgflighttime_h = []
+for scenario_data in VO_flst_data_h:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    VO_flst_flighttime_h.append(flight_times)
+    VO_flst_avgflighttime_h.append(np.average(flight_times))
+
+NONE_flst_flighttime_h = []
+NONE_flst_avgflighttime_h = []
+for scenario_data in NONE_flst_data_h:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    NONE_flst_flighttime_h.append(flight_times)
+    NONE_flst_avgflighttime_h.append(np.average(flight_times))
+
+AIR_flst_flighttime_h = []
+AIR_flst_avgflighttime_h = []
+for scenario_data in AIR_flst_data_h:
+    flight_times = np.array([x[0] - x[2] for x in scenario_data[1]])
+    AIR_flst_flighttime_h.append(flight_times)
+    AIR_flst_avgflighttime_h.append(np.average(flight_times))
+
+# %%%% Graphs
+plt.figure('avg_flight_time')
+ax1 = plt.subplot(131)
+ax1.set_title('Low density')
+ax1.scatter([2]*len(MVP_flst_avgflighttime_l), MVP_flst_avgflighttime_l)
+ax1.scatter([4]*len(ORCA_flst_avgflighttime_l), ORCA_flst_avgflighttime_l)
+ax1.scatter([3]*len(VO_flst_avgflighttime_l), VO_flst_avgflighttime_l)
+ax1.scatter([0]*len(NONE_flst_avgflighttime_l), NONE_flst_avgflighttime_l)
+ax1.scatter([1]*len(AIR_flst_avgflighttime_l), AIR_flst_avgflighttime_l)
+ax1.set_xticks([0,1,2,3,4])
+ax1.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax1.set_ylabel('Seconds [s]')
+
+ax2 = plt.subplot(132)
+ax2.set_title('Medium density')
+ax2.scatter([2]*len(MVP_flst_avgflighttime_m), MVP_flst_avgflighttime_m)
+ax2.scatter([4]*len(ORCA_flst_avgflighttime_m), ORCA_flst_avgflighttime_m)
+ax2.scatter([3]*len(VO_flst_avgflighttime_m), VO_flst_avgflighttime_m)
+ax2.scatter([0]*len(NONE_flst_avgflighttime_m), NONE_flst_avgflighttime_m)
+ax2.scatter([1]*len(AIR_flst_avgflighttime_m), AIR_flst_avgflighttime_m)
+ax2.set_xticks([0,1,2,3,4])
+ax2.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax2.set_ylabel('Seconds [s]')
+
+ax3 = plt.subplot(133)
+ax3.set_title('High density')
+ax3.scatter([2]*len(MVP_flst_avgflighttime_h), MVP_flst_avgflighttime_h)
+ax3.scatter([4]*len(ORCA_flst_avgflighttime_h), ORCA_flst_avgflighttime_h)
+ax3.scatter([3]*len(VO_flst_avgflighttime_h), VO_flst_avgflighttime_h)
+ax3.scatter([0]*len(NONE_flst_avgflighttime_h), NONE_flst_avgflighttime_h)
+ax3.scatter([1]*len(AIR_flst_avgflighttime_h), AIR_flst_avgflighttime_h)
+ax3.set_xticks([0,1,2,3,4])
+ax3.set_xticklabels(['None', 'Air', 'MVP', 'VO', 'ORCA'])
+ax3.set_ylabel('Seconds [s]')
+
+ax1.set_ylim([min(ax1.get_ylim()[0], ax2.get_ylim()[0], ax3.get_ylim()[0]), max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax2.set_ylim([min(ax1.get_ylim()[0], ax2.get_ylim()[0], ax3.get_ylim()[0]), max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+ax3.set_ylim([min(ax1.get_ylim()[0], ax2.get_ylim()[0], ax3.get_ylim()[0]), max(ax1.get_ylim()[1], ax2.get_ylim()[1], ax3.get_ylim()[1])])
+plt.show()
+
+# %%% Aircraft that didn't make it
+# %%%% Data gathering
+
+
 
 #%% Process REGLOG
 #Get needed files
