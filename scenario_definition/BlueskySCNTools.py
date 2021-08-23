@@ -398,7 +398,7 @@ class BlueskySCNTools():
             elif resometh == 'VO':
                 f.write('00:00:00>ASAS ON\n00:00:00>RESO VOSPEEDBASED\n')
             else:
-                f.write('00:00:00>ASAS ON\n')
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO OFF\n')
             if airspace == True:
                 f.write('00:00:00>STREETSENABLE\n')
             # Enable logger

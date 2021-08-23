@@ -178,7 +178,5 @@ with open('Scenarios/batch_SESAR.scn', 'w') as f:
         f.write(f'00:00:00>SCEN {simplename}\n')
         f.write(f'00:00:00>PCALL SESAR2021/{scenname}\n')
         f.write('00:00:00>FF\n')
-        f.write('00:00:00>SCHEDULE 01:05:00 HOLD\n\n')
-        
-    
-    
+        f.write('00:00:00>SCHEDULE 01:05:00 HOLD\n')
+        f.write('00:00:00>SCHEDULE 01:05:00 RESET\n\n')

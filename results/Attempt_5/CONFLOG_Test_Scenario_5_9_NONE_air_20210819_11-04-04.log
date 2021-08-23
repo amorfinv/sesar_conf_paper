@@ -1,0 +1,14 @@
+# #######################################################
+# CONF LOG
+# Conflict Statistics
+# #######################################################
+# 
+# Parameters [Units]:
+# Simulation time [s], Total number of conflicts [-],Total number of losses of separation[-],Total number of geofence breaches[-]
+# 
+# simt
+730.05000000,0,0,1
+1297.50000000,1,0,1
+1310.05000000,1,1,2
+1630.50000000,2,1,2
+3382.05000000,2,1,3
