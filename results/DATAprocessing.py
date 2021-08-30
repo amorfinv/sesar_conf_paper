@@ -28,11 +28,16 @@ for i, file in enumerate(files):
     if file[0:4] == 'CONF':
         filtered_files.append(file)
 
-MVP_conf_data = []
-ORCA_conf_data = []
-VO_conf_data = []
 NONE_conf_data = []
-AIR_conf_data = []
+NONE_AIR_conf_data = []
+MVP_conf_data = []
+MVP_AIR_conf_data = []
+ORCA_conf_data = []
+ORCA_AIR_conf_data = []
+MVPC_conf_data = []
+MVPC_AIR_conf_data = []
+ORCAC_conf_data = []
+ORCAC_AIR_conf_data = []
 
 for file in filtered_files:
     # Position 22 (and maybe 23) is always the aimed-for flight density
@@ -51,46 +56,70 @@ for file in filtered_files:
     needed_data = np.append(flight_den, needed_data)
     # Append data to appropriate place
     if '_MVP_' in file:
-        MVP_conf_data.append(needed_data)
+        if '_air_' in file:
+            MVP_AIR_conf_data.append(needed_data)
+        else:
+            MVP_conf_data.append(needed_data)
+    elif '_MVPC_' in file:
+        if '_air_' in file:
+            MVPC_AIR_conf_data.append(needed_data)
+        else:
+            MVPC_conf_data.append(needed_data)
     elif '_ORCA_' in file:
-        ORCA_conf_data.append(needed_data)
-    elif '_VO_' in file:
-        VO_conf_data.append(needed_data)
-    elif '_air_' in file:
-        AIR_conf_data.append(needed_data)
-    elif '_NONE_' in file and '_air_' not in file:
-        NONE_conf_data.append(needed_data)
+        if '_air_' in file:
+            ORCA_AIR_conf_data.append(needed_data)
+        else:
+            ORCA_conf_data.append(needed_data)
+    elif '_ORCAC_' in file:
+        if '_air_' in file:
+            ORCAC_AIR_conf_data.append(needed_data)
+        else:
+            ORCAC_conf_data.append(needed_data)
+    elif '_NONE_' in file:
+        if '_air_' in file:
+            NONE_AIR_conf_data.append(needed_data)
+        else:
+            NONE_conf_data.append(needed_data)
     else:
         print('Something is wrong.')
 
 # Convert to numpy arrays
-MVP_conf_data = np.array(MVP_conf_data)
-ORCA_conf_data = np.array(ORCA_conf_data)
-VO_conf_data = np.array(VO_conf_data)
 NONE_conf_data = np.array(NONE_conf_data)
-AIR_conf_data = np.array(AIR_conf_data)
+NONE_AIR_conf_data = np.array(NONE_AIR_conf_data)
+MVP_conf_data = np.array(MVP_conf_data)
+MVP_AIR_conf_data = np.array(MVP_AIR_conf_data)
+ORCA_conf_data = np.array(ORCA_conf_data)
+ORCA_AIR_conf_data = np.array(ORCA_AIR_conf_data)
+MVPC_conf_data = np.array(MVPC_conf_data)
+MVPC_AIR_conf_data = np.array(MVPC_AIR_conf_data)
+ORCAC_conf_data = np.array(ORCAC_conf_data)
+ORCAC_AIR_conf_data = np.array(ORCAC_AIR_conf_data)
+
+
+globaldata = [NONE_conf_data, NONE_AIR_conf_data, 
+              MVP_conf_data, MVP_AIR_conf_data,
+              ORCA_conf_data, ORCA_AIR_conf_data,
+              MVPC_conf_data, MVPC_AIR_conf_data, 
+              ORCAC_conf_data, ORCAC_AIR_conf_data]
 
 # %%% Divide the data by density
 # Low
-MVP_conf_data_l = MVP_conf_data[np.where(MVP_conf_data[:,0] == 5)]
-ORCA_conf_data_l = ORCA_conf_data[np.where(ORCA_conf_data[:,0] == 5)]
-VO_conf_data_l = VO_conf_data[np.where(VO_conf_data[:,0] == 5)]
-NONE_conf_data_l = NONE_conf_data[np.where(NONE_conf_data[:,0] == 5)]
-AIR_conf_data_l = AIR_conf_data[np.where(AIR_conf_data[:,0] == 5)]
+globaldata_l = []
+for data in globaldata:
+    low_data = data[np.where(data[:,0] == 5)]
+    globaldata_l.append(low_data)
 
 # Medium
-MVP_conf_data_m = MVP_conf_data[np.where(MVP_conf_data[:,0] == 8)]
-ORCA_conf_data_m = ORCA_conf_data[np.where(ORCA_conf_data[:,0] == 8)]
-VO_conf_data_m = VO_conf_data[np.where(VO_conf_data[:,0] == 8)]
-NONE_conf_data_m = NONE_conf_data[np.where(NONE_conf_data[:,0] == 8)]
-AIR_conf_data_m = AIR_conf_data[np.where(AIR_conf_data[:,0] == 8)]
+globaldata_m = []
+for data in globaldata:
+    low_data = data[np.where(data[:,0] == 5)]
+    globaldata_l.append(low_data)
 
 # High
-MVP_conf_data_h = MVP_conf_data[np.where(MVP_conf_data[:,0] == 11)]
-ORCA_conf_data_h = ORCA_conf_data[np.where(ORCA_conf_data[:,0] == 11)]
-VO_conf_data_h = VO_conf_data[np.where(VO_conf_data[:,0] == 11)]
-NONE_conf_data_h = NONE_conf_data[np.where(NONE_conf_data[:,0] == 11)]
-AIR_conf_data_h = AIR_conf_data[np.where(AIR_conf_data[:,0] == 11)]
+globaldata_h = []
+for data in globaldata:
+    low_data = data[np.where(data[:,0] == 5)]
+    globaldata_l.append(low_data)
 
 # %%% Graphs
 
