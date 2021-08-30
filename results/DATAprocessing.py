@@ -96,7 +96,7 @@ ORCAC_conf_data = np.array(ORCAC_conf_data)
 ORCAC_AIR_conf_data = np.array(ORCAC_AIR_conf_data)
 
 
-globaldata = [NONE_conf_data, NONE_AIR_conf_data, 
+globaldata_init = [NONE_conf_data, NONE_AIR_conf_data, 
               MVP_conf_data, MVP_AIR_conf_data,
               ORCA_conf_data, ORCA_AIR_conf_data,
               MVPC_conf_data, MVPC_AIR_conf_data, 
@@ -105,21 +105,23 @@ globaldata = [NONE_conf_data, NONE_AIR_conf_data,
 # %%% Divide the data by density
 # Low
 globaldata_l = []
-for data in globaldata:
+for data in globaldata_init:
     low_data = data[np.where(data[:,0] == 5)]
     globaldata_l.append(low_data)
 
 # Medium
 globaldata_m = []
-for data in globaldata:
+for data in globaldata_init:
     low_data = data[np.where(data[:,0] == 5)]
     globaldata_l.append(low_data)
 
 # High
 globaldata_h = []
-for data in globaldata:
+for data in globaldata_init:
     low_data = data[np.where(data[:,0] == 5)]
     globaldata_l.append(low_data)
+    
+globaldata = [globaldata_l, globaldata_m, globaldata_h]
 
 # %%% Graphs
 
