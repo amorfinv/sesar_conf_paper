@@ -158,18 +158,17 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     with open(f'Pickles/Test_Scenario_{concurrent_ac}_{idx+1}.pickle', 'rb') as f:
         scenario_dict = pickle.load(f)
     
-    for resometh in ['NONE', 'MVP', 'VO', 'ORCA']:
+    for resometh in ['NONE', 'ORCA', 'MVP', 'ORCAC', 'MVPC']:
         # Step 4a: Create scenario file from dictionary
         bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}.scn', 
-                     scenario_dict, resometh=resometh)
+                     scenario_dict, resometh=resometh, airspace=False)
         scennames.append(f'Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}.scn')
+        
+        bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}_air.scn', 
+                    scenario_dict, resometh=resometh, airspace=True)
+        scennames.append(f'Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}_air.scn')
     
-    # airspace structure scenarios
-    # Step 4b: Create scenario file from dictionary for airspace experiment
-    bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx+1}_NONE_air.scn', 
-                    scenario_dict, resometh='NONE', airspace=True)
-    scennames.append(f'Test_Scenario_{concurrent_ac}_{idx+1}_NONE_air.scn')
-    print('Scenario file created!')
+    print('Scenario files created!')
     
 # Step 5: Create batch simulation file
 with open('Scenarios/batch_SESAR.scn', 'w') as f:

@@ -392,11 +392,13 @@ class BlueskySCNTools():
             # Add first ff
             f.write('00:00:00.00>FF\n')
             if resometh == 'MVP':
-                f.write('00:00:00>ASAS ON\n00:00:00>RESO MVP\n00:00:00>RMETHH SPD\n')
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO VOSPEEDBASED\n')
             elif resometh == 'ORCA':
                 f.write('00:00:00>ASAS ON\n00:00:00>RESO ORCASPEEDBASED\n')
-            elif resometh == 'VO':
-                f.write('00:00:00>ASAS ON\n00:00:00>RESO VOSPEEDBASED\n')
+            elif resometh == 'MVPC':
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO VOSPEEDBASEDC\n')
+            elif resometh == 'ORCAC':
+                f.write('00:00:00>ASAS ON\n00:00:00>RESO ORCASPEEDBASEDC\n')
             else:
                 f.write('00:00:00>ASAS ON\n00:00:00>RESO OFF\n')
             if airspace == True:
