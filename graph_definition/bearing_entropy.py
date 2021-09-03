@@ -3,11 +3,18 @@ import geopandas as gpd
 from os import path
 import numpy as np
 from osmnx.bearing import orientation_entropy
+import momepy
 
 gis_data_path = 'gis'
 
 # load cleaned graph
 G = ox.load_graphml(filepath=path.join(gis_data_path, 'streets', 'directed_groups.graphml'))
+
+# calculate betweenness centrality
+G_new = momepy.betweenness_centrality(G, weight='length', normalized=True)
+
+ox.save_graph_geopackage(G_new, filepath=path.join(gis_data_path, 'streets', 'betweenness.gpkg'))
+
 
 # get undirected graph
 G_un = ox.get_undirected(G)
