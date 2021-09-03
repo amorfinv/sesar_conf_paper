@@ -2,7 +2,6 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from cycler import cycler
 
 nm2m = 1852
 
@@ -24,8 +23,8 @@ plt.rcParams["scatter.marker"] = 'x'
 plt.rcParams['lines.markersize'] = 4
 
 densities = ['Low', 'Medium', 'High']
-methods = ['N', 'NA', 'M', 'MA', 'O', 'OA', 'MC', 'MCA', 'CR', 'CRA']
-to_plot = [0,1,8, 9]
+methods = ['N', 'A', 'M', 'MA', 'O', 'OA','MC','MCA', 'CR', 'CRA']
+to_plot = [0,1,8,9]
 
 # %%% Get needed files
 for i, file in enumerate(files):
@@ -110,18 +109,24 @@ global_conf_init = [NONE_conf_data, NONE_AIR_conf_data,
 # Low
 global_conf_l = []
 for data in global_conf_init:
+    if len(data) == 0:
+        continue
     low_data = data[np.where(data[:,0] == 5)]
     global_conf_l.append(low_data)
 
 # Medium
 global_conf_m = []
 for data in global_conf_init:
+    if len(data) == 0:
+        continue
     medium_data = data[np.where(data[:,0] == 8)]
     global_conf_m.append(medium_data)
 
 # High
 global_conf_h = []
 for data in global_conf_init:
+    if len(data) == 0:
+        continue
     high_data = data[np.where(data[:,0] == 11)]
     global_conf_h.append(high_data)
     
@@ -247,18 +252,24 @@ global_flst_init = [NONE_flst_data, NONE_AIR_flst_data,
 # Low
 global_flst_l = []
 for data in global_flst_init:
+    if len(data) == 0:
+        continue
     low_data = data[np.where(data[:,0] == 5)]
     global_flst_l.append(low_data)
 
 # Medium
 global_flst_m = []
 for data in global_flst_init:
+    if len(data) == 0:
+        continue
     medium_data = data[np.where(data[:,0] == 8)]
     global_flst_m.append(medium_data)
 
 # High
 global_flst_h = []
 for data in global_flst_init:
+    if len(data) == 0:
+        continue
     high_data = data[np.where(data[:,0] == 11)]
     global_flst_h.append(high_data)
     
@@ -407,18 +418,24 @@ global_reg_init = [NONE_reg_data, NONE_AIR_reg_data,
 # Low
 global_reg_l = []
 for data in global_reg_init:
+    if len(data) == 0:
+        continue
     low_data = data[np.where(data[:,0] == 5)]
     global_reg_l.append(low_data)
 
 # Medium
 global_reg_m = []
 for data in global_reg_init:
+    if len(data) == 0:
+        continue
     medium_data = data[np.where(data[:,0] == 8)]
     global_reg_m.append(medium_data)
 
 # High
 global_reg_h = []
 for data in global_reg_init:
+    if len(data) == 0:
+        continue
     high_data = data[np.where(data[:,0] == 11)]
     global_reg_h.append(high_data)
     

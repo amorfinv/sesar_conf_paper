@@ -158,7 +158,7 @@ for idx, concurrent_ac in enumerate([ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     with open(f'Pickles/Test_Scenario_{concurrent_ac}_{idx+1}.pickle', 'rb') as f:
         scenario_dict = pickle.load(f)
     
-    for resometh in ['NONE', 'ORCA', 'MVP', 'ORCAC', 'MVPC']:
+    for resometh in ['NONE', 'ORCA', 'ORCAC']:
         # Step 4a: Create scenario file from dictionary
         bst.Dict2Scn(f'Scenarios/Test_Scenario_{concurrent_ac}_{idx+1}_{resometh}.scn', 
                      scenario_dict, resometh=resometh, airspace=False)
