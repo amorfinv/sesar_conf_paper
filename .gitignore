@@ -2,3 +2,7 @@ graph_defintion/cache
 graph_definition/__pycache__/
 .vscode/settings.json
 .DS_Store
+graph_definition/gis/*/*.gpkg-wal
+graph_definition/gis/*/*.gpkg-shm
+results/conflict_locs/*.gpkg-shm
+results/conflict_locs/*.gpkg-wal
